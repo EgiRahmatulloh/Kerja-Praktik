@@ -16,7 +16,8 @@
                             <option value="">Semua Status</option>
                             <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                             <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Disetujui</option>
-                            <option value="dicetak" {{ request('status') == 'dicetak' ? 'selected' : '' }}>Dicetak</option>
+                            <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                            <option value="printed" {{ request('status') == 'printed' ? 'selected' : '' }}>Dicetak</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -62,34 +63,27 @@
                             <td>{{ $letter->created_at->format('d/m/Y') }}</td>
                             <td>
                                 @if($letter->status == 'pending')
-                                <span class="badge bg-warning">Pending</span>
+                                <span class="badge bg-warning text-dark">Pending</span>
                                 @elseif($letter->status == 'approved')
                                 <span class="badge bg-success">Disetujui</span>
-                                @elseif($letter->status == 'dicetak')
+                                @elseif($letter->status == 'rejected')
+                                <span class="badge bg-danger">Ditolak</span>
+                                @elseif($letter->status == 'printed')
                                 <span class="badge bg-primary">Dicetak</span>
+                                @elseif($letter->status == 'dicetak') {{-- Fallback for old status --}}
+                                <span class="badge bg-info text-dark">Dicetak (Lama)</span>
                                 @endif
                             </td>
                             <td>{{ $letter->no_surat ?: '-' }}</td>
                             <td>
-                            <td>
-                                <a href="{{ route('admin.filled-letters.show', $letter->id) }}" class="btn btn-sm btn-info">
+                                <a href="{{ route('admin.filled-letters.show', $letter->id) }}" class="btn btn-sm btn-info" title="Detail">
                                     <i class="bi bi-eye"></i>
                                 </a>
-
-                                @if($letter->status == 'pending')
-                                <a href="{{ route('admin.filled-letters.edit', $letter->id) }}" class="btn btn-sm btn-warning">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                @endif
-
-                                @if($letter->status == 'approved')
-                                <a href="{{ route('admin.filled-letters.edit', $letter->id) }}" class="btn btn-sm btn-warning" title="Edit Status">
+                                <a href="{{ route('admin.filled-letters.edit', $letter->id) }}" class="btn btn-sm btn-warning" title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                @endif
-
-                                @if($letter->status == 'approved' || $letter->status == 'dicetak')
-                                <a href="{{ route('admin.filled-letters.pdf', $letter->id) }}" class="btn btn-sm btn-success" target="_blank">
+                                @if($letter->status == 'approved' || $letter->status == 'dicetak' || $letter->status == 'printed')
+                                <a href="{{ route('admin.filled-letters.print', $letter->id) }}" class="btn btn-sm btn-success" target="_blank" title="Print">
                                     <i class="bi bi-printer"></i>
                                 </a>
                                 @endif

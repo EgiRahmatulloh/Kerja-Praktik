@@ -45,6 +45,10 @@ class DatabaseSeeder extends Seeder
             TemplateSuratSeeder::class,
             DataItemSeeder::class,
             LetterTypeSeeder::class,
+            SuratPemberitahuanSeeder::class,
+            SuratBalasanSeeder::class,
+            SuratKuasaSeeder::class,
+            BeritaAcaraSeeder::class,
             // FilledLetterSeeder::class,
         ]);
     }

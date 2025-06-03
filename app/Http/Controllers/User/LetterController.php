@@ -57,12 +57,8 @@ class LetterController extends Controller
             }
         }
 
-        // Ambil kode surat dari template surat
-        $templateSurat = $letterType->templateSurat;
-        $kodeSurat = $templateSurat->kode_surat;
-
-        // Cari nomor terakhir berdasarkan kode surat
-        $lastLetter = FilledLetter::where('kode_surat', $kodeSurat)
+        // Cari nomor terakhir untuk jenis surat ini
+        $lastLetter = FilledLetter::where('letter_type_id', $letterType->id)
             ->orderBy('no_surat', 'desc')
             ->first();
 
@@ -88,7 +84,7 @@ class LetterController extends Controller
         $filledLetter->filled_data = json_encode($validatedData);
         $filledLetter->status = 'pending';
         $filledLetter->no_surat = $noSurat;
-        $filledLetter->kode_surat = $kodeSurat;
+
         $filledLetter->save();
 
         // Trigger event untuk notifikasi real-time

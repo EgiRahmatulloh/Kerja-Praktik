@@ -122,13 +122,6 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="kode_surat" class="form-label">Kode Surat</label>
-                                    <input type="text" class="form-control" id="kode_surat" value="{{ $letter->kode_surat }}" readonly>
-                                    <div class="form-text">Kode surat diambil otomatis dari template surat</div>
-                                </div>
-                            </div>
 
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -311,16 +304,11 @@
                 processedContent = processedContent.replace(new RegExp('\{\{\$data->' + key + '\}\}', 'g'), value);
             }
 
-            // Ganti variabel nomor surat dan kode surat
             processedContent = processedContent.replace(/\{\{ \$noSurat \}\}/g, '{{ $letter->no_surat }}');
             processedContent = processedContent.replace(/\{\{\$noSurat\}\}/g, '{{ $letter->no_surat }}');
             processedContent = processedContent.replace(/\{\{ \$data->noSurat \}\}/g, '{{ $letter->no_surat }}');
             processedContent = processedContent.replace(/\{\{\$data->noSurat\}\}/g, '{{ $letter->no_surat }}');
 
-            processedContent = processedContent.replace(/\{\{ \$kodeSurat \}\}/g, '{{ $letter->kode_surat }}');
-            processedContent = processedContent.replace(/\{\{\$kodeSurat\}\}/g, '{{ $letter->kode_surat }}');
-            processedContent = processedContent.replace(/\{\{ \$data->kodeSurat \}\}/g, '{{ $letter->kode_surat }}');
-            processedContent = processedContent.replace(/\{\{\$data->kodeSurat\}\}/g, '{{ $letter->kode_surat }}');
 
             return processedContent;
         }

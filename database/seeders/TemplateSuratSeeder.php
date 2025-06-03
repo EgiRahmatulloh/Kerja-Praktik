@@ -14,318 +14,449 @@ class TemplateSuratSeeder extends Seeder
    */
   public function run()
   {
-    \App\Models\TemplateSurat::create([
-      'nama_template' => 'Surat Keterangan Domisili',
-      'konten_template' => '<center>
-      <table width="450">
-        <tr>
-          <td><img src="{{ asset(\'dashmin/img/logo_cetak.svg\') }}" width="110" height="110" /></td>
-          <td style="font-family: \'Times New Roman\', Times, serif; font-size: 13px">
-            <center>
-              <font size="5"><b>PEMERINTAH KOTA LHOKSEUMAWE</b> </font><br />
-              <font size="4"><b>KECAMATAN MUARA DUA</b></font
-              ><br />
-              <font size="5"><b>GAMPONG PAYA PUNTEUET</b></font
-              ><br />
-              <font size="3"><i>JLN. Tgk, WAHAB DAHLAWI KM.1</i></font
-              ><br />
-            </center>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2"><hr style="border: 1px solid" /></td>
-        </tr>
-      </table>
-      <br />
-      <table width="450">
-        <tr>
-          <td style="font-family: \'Times New Roman\', Times, serif; font-size: 18px; text-align: center; font-weight: bold" class="text">
-            <u>SURAT KETERANGAN DOMISILI</u>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: center">Nomor : {{ $data->kodeSurat }}/{{ $data->noSurat }}/{{ $data->tahun }}</td>
-        </tr>
-      </table>
-      <br /><br /><br />
-      <table width="450">
-        <tr>
-          <td>Keuchik Gampong Paya Punteuet Kecamatan Muara Dua Pemerintah Kota Lhokseumawe, dengan ini menerangkan bahwa :</td>
-        </tr>
-      </table>
-      <br /><br />
-      <table width="450">
-        <tr>
-          <td width="120">Nama</td>
-          <td width="10">:</td>
-          <td width="335">{{ $data->nama }}</td>
-        </tr>
-        <tr>
-          <td width="120">NIK</td>
-          <td width="10">:</td>
-          <td width="335">{{ $data->nik }}</td>
-        </tr>
-        <tr>
-          <td width="120">Tempat, Tanggal Lahir</td>
-          <td width="10">:</td>
-          <td width="335">{{ $data->tempatTglLahir }}</td>
-        </tr>
-        <tr>
-          <td width="120">Pekerjaan</td>
-          <td width="10">:</td>
-          <td width="335">{{ $data->pekerjaan }}</td>
-        </tr>
-        <tr>
-          <td width="120">Alamat</td>
-          <td width="10">:</td>
-          <td width="335">{{ $data->alamat }}</td>
-        </tr>
-      </table>
-      <br /><br />
-      <table width="450">
-        <tr>
-          <td >
-            {!! $data->keterangan !!}
-          </td>
-        </tr>
-        <br /><br />
-      </table>
-      <br /><br />
-      <table width="450">
-        <tr>
-          <td >Demikian surat keterangan ini kami perbuat untuk dapat dipergunakan seperlunya.</td>
-        </tr>
-      </table>
-      <br /><br /><br /><br>
-      <table width="450">
-        <tr>
-          <td width="300"></td>
-          <td style="text-align: left">Paya Punteuet, {{ date(\'d M Y\', strtotime($data->tglSurat)); }}</td>
-        </tr>
-        <tr>
-          <td width="300"></td>
-          <td style="text-align: left">An. {{ $data->ttd }}</td>
-        </tr>
-      </table>
-      <br /><br />
-      <table width="450" style="margin-bottom: 100px">
-        <tr>
-          <td width="300"></td>
-          <td style="text-align: left">{{ $data->namaTtd }}</td>
-        </tr>
-      </table>
-    </center>'
-    ]);
+   \App\Models\TemplateSurat::create([
+     'nama_template' => 'Surat Pengantar Izin Kerja Praktik (KP)',
+     'konten_template' => '<div class="container">
+       <table width="450" style="border-collapse: collapse;">
+           <tbody>
+               <tr>
+                   <td style="width: 110px; text-align: left;">
+                       <img src="https://raw.githubusercontent.com/EgiRahmatulloh/Logo/refs/heads/main/logo_unper.png" alt="Logo Universitas" style="width: 110px; height: 110px; display: block; margin: 0 auto;" onerror="this.onerror=null;this.src=\'https://placehold.co/110x110/cccccc/333333?text=Logo\';">
+                   </td>
+                   <td style="font-family: \'Times New Roman\', Times, serif; font-size: 13px; text-align: center;">
+                       <center>
+                           <font size="5"><b><span style="font-size: 14px;">YAYASAN UNIVERSITAS SILIWANGI</span></b></font><br>
+                           <font size="4"><b><span style="font-size: 14px;">UNIVERSITAS PERJUANGAN TASIKMALAYA</span></b></font><br>
+                           <font size="5"><b><span style="font-size: 14px;">FAKULTAS TEKNIK</span></b></font><br>
+                           <font size="3"><i><span style="font-size: 11px;">Jalan Pembela Tanah Air (PETA) No. 177 Kota Tasikmalaya, Kode Pos 46115</span></i></font><br>
+                           <font size="3"><i><span style="font-size: 11px;">Telepon (0265) 326058, laman : http://www.unper.ac.id</span></i></font>
+                       </center>
+                   </td>
+                   <td style="width: 110px; text-align: right;">
+                       <img src="https://raw.githubusercontent.com/EgiRahmatulloh/Logo/515b4b45417676e20e79f06fad8437d91c97c2cb/image.png" alt="Logo Yayasan" style="width: 110px; height: 110px; display: block; margin: 0 auto;" onerror="this.onerror=null;this.src=\'https://placehold.co/110x110/cccccc/333333?text=Logo\';">
+                   </td>
+               </tr>
+               <tr>
+                   <td colspan="3"><hr style="border: 1px solid black;"></td>
+               </tr>
+           </tbody>
+       </table>
+       <br>
+
+       <table width="450" style="border-collapse: collapse; margin-top: 10px;">
+           <tbody>
+               <tr>
+                   <td colspan="3" style="text-align: right;"><font size="2">Tempat,tanggal.......</font></td>
+               </tr>
+           </tbody>
+       </table>
+
+       <br>
+
+       <table width="450" style="border-collapse: collapse;">
+           <tbody>
+               <tr>
+                   <td width="70"><font size="2">Nomor</font></td>
+                   <td width="10"><font size="2">:</font></td>
+                   <td>{{ $data->noSurat }}<font size="2">/KP/FT-UP/</font>{{ $data->bulan }}<font size="2">/</font><span style="font-size: 1rem;">{{ $data->tahun }}</span><br></td>
+               </tr>
+               <tr>
+                   <td><font size="2">Lampiran</font></td>
+                   <td><font size="2">:</font></td>
+                   <td>-</td>
+               </tr>
+               <tr>
+                   <td><font size="2">Perihal</font></td>
+                   <td><font size="2">:</font></td>
+                   <td><font size="2">Pengantar Izin Kerja Praktik (KP)</font></td>
+               </tr>
+           </tbody>
+       </table>
+
+       <br>
+
+       <table width="450" style="border-collapse: collapse;">
+           <tbody>
+               <tr>
+                   <td width="70"><font size="2">Kepada Yth</font></td>
+                   <td width="10"><font size="2">:</font></td><td>Dekan</td></tr></tbody></table></div><div class="container"><table width="450" style="border-collapse: collapse;"><tbody><tr><td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Fakultas Teknik Universitas Perjuangan</td></tr></tbody></table></div><div class="container"><table width="450" style="border-collapse: collapse;"><tbody><tr><td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Jl. Peta No. 177, Kahuripan, kec. Tawang, Kota</td></tr></tbody></table></div><div class="container"><table width="450" style="border-collapse: collapse;"><tbody><tr><td>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Tasikmalaya</td>
+               </tr>
+           </tbody>
+       </table>
+
+       <br>
+
+       <table width="450" style="border-collapse: collapse;">
+           <tbody>
+               <tr>
+                   <td width="80"></td>
+                   <td colspan="2">
+                       <font size="2">Disampaikan dengan hormat,</font>
+                   </td>
+               </tr>
+               <tr>
+                   <td width="80"></td>
+                   <td colspan="2">
+                       <font size="2">
+                       <br>
+                       Sehubungan surat ini ....................................................................................................................................................................................................
+                       <br><br>
+                       Maka kami bermaksud untuk menyampaikan surat ini sebagai pengantar:
+                       <br><br>
+                       <table width="350" style="border-collapse: collapse;">
+                           <tbody><tr>
+                               <td width="50">Nama</td>
+                               <td width="10">:</td>
+                               <td>{{ $nama }}</td></tr><tr><td>NIM</td>
+                               <td>:</td>
+                               <td>{{ $nim }}</td></tr></tbody></table></font></td></tr></tbody></table></div><div class="container"><table width="450" style="border-collapse: collapse;"><tbody><tr><td colspan="2"><font size="2"><table width="350" style="border-collapse: collapse;"><tbody><tr><td>Judul&nbsp; &nbsp; &nbsp; :&nbsp; {{ $judul }}</td></tr></tbody></table></font></td></tr></tbody></table></div><div class="container"><table width="450" style="border-collapse: collapse;"><tbody><tr><td colspan="2"><font size="2"><table width="350" style="border-collapse: collapse;"><tbody><tr><td>Tempat&nbsp; &nbsp;: {{ $alamatInstitusi }}</td>
+                           </tr>
+                       </tbody></table>
+                       <br>
+                       Demikianlah surat pengantar<br>
+                       Atas perhatiannya kami ucapkan terimakasih.
+                       </font>
+                   </td>
+               </tr>
+           </tbody>
+       </table>
+
+       <br><br>
+
+       <table width="450" style="border-collapse: collapse;">
+           <tbody>
+               <tr>
+                   <td width="300"></td>
+                   <td style="text-align: left;">
+                       <font size="2">
+                       Dekan Fakultas Teknik
+                       <br><br><br><br>
+                       Tanda tangan dan cap jabatan
+                       <br><br>
+                       NAMA PEJABAT<br>
+                       NIP/NIDN/NUPTK/NIDN.
+                       <br>
+                       ..............................................
+                       </font>
+                   </td>
+               </tr>
+           </tbody>
+       </table>
+   </div>',
+     'aktif' => true
+   ]);
 
     \App\Models\TemplateSurat::create([
-      'nama_template' => 'Surat Keterangan Usaha',
-      'konten_template' => '<center>
-      <table width="450">
-        <tr>
-          <td><img src="{{ asset(\'dashmin/img/logo_cetak.svg\') }}" width="110" height="110" /></td>
-          <td style="font-family: \'Times New Roman\', Times, serif; font-size: 13px">
-            <center>
-              <font size="5"><b>PEMERINTAH KOTA LHOKSEUMAWE</b> </font><br />
-              <font size="4"><b>KECAMATAN MUARA DUA</b></font
-              ><br />
-              <font size="5"><b>GAMPONG PAYA PUNTEUET</b></font
-              ><br />
-              <font size="3"><i>JLN. Tgk, WAHAB DAHLAWI KM.1</i></font
-              ><br />
-            </center>
-          </td>
-          
-        </tr>
-        <tr>
-          <td colspan="2"><hr style="border: 1px solid" /></td>
-        </tr>
-      </table>
-      <br />
-      <table width="450">
-        <tr>
-          <td style="font-family: \'Times New Roman\', Times, serif; font-size: 18px; text-align: center; font-weight: bold" class="text">
-            <u>SURAT KETERANGAN USAHA</u>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: center">Nomor : {{ $data->kodeSurat }}/{{ $data->noSurat }}/{{ $data->tahun }}</td>
-        </tr>
-      </table>
-      <br /><br /><br />
-      <table width="450">
-        <tr>
-          <td>Keuchik Gampong Paya Punteuet Kecamatan Muara Dua Pemerintah Kota Lhokseumawe, dengan ini menerangkan bahwa :</td>
-        </tr>
-      </table>
-      <br /><br />
-      <table width="450">
-        <tr>
-          <td width="120">Nama</td>
-          <td width="10">:</td>
-          <td width="335">{{ $data->nama }}</td>
-        </tr>
-        <tr>
-          <td width="120">NIK</td>
-          <td width="10">:</td>
-          <td width="335">{{ $data->nik }}</td>
-        </tr>
-        <tr>
-          <td width="120">Tempat, Tanggal Lahir</td>
-          <td width="10">:</td>
-          <td width="335">{{ $data->tempatTglLahir }}</td>
-        </tr>
-        <tr>
-          <td width="120">Pekerjaan</td>
-          <td width="10">:</td>
-          <td width="335">{{ $data->pekerjaan }}</td>
-        </tr>
-        <tr>
-          <td width="120">Alamat</td>
-          <td width="10">:</td>
-          <td width="335">{{ $data->alamat }}</td>
-        </tr>
-      </table>
-      <br /><br />
-      <table width="450">
-        <tr>
-          <td>
-            {!! $data->keterangan !!}
-          </td>
-        </tr>
-        <br /><br />
-      </table>
-      <br /><br />
-      <table width="450">
-        <tr>
-          <td>Demikian surat keterangan ini kami perbuat untuk dapat dipergunakan seperlunya.</td>
-        </tr>
-      </table>
-      <br /><br /><br />
-      <table width="450">
-        <tr>
-          <td width="300"></td>
-          <td style="text-align: left">Paya Punteuet, {{ date(\'d M Y\', strtotime($data->tglSurat)); }}</td>
-        </tr>
-        <tr>
-          <td width="300"></td>
-          <td style="text-align: left">An. {{ $data->ttd }}</td>
-        </tr>
-      </table>
-      <br /><br />
-      <table width="450" style="margin-bottom: 100px">
-        <tr>
-            <td width="300"></td>
-            <td style="text-align: left">{{ $data->namaTtd }}</td>
-        </tr>
-      </table>
-    </center>'
-    ]);
+      'nama_template' => 'Surat Keterangan Lulus',
+      'konten_template' => '<div class="container">
+        <table width="450" style="border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td style="width: 110px; text-align: left;">
+                        <img src="https://raw.githubusercontent.com/EgiRahmatulloh/Logo/refs/heads/main/logo_unper.png" alt="Logo Universitas" style="width: 110px; height: 110px; display: block; margin: 0 auto;" onerror="this.onerror=null;this.src=\'https://placehold.co/110x110/cccccc/333333?text=Logo\';">
+                    </td>
+                    <td style="font-family: \'Times New Roman\', Times, serif; font-size: 13px; text-align: center;">
+                        <center>
+                            <font size="5"><b><span style="font-size: 14px;">YAYASAN UNIVERSITAS SILIWANGI</span></b></font><br>
+                            <font size="4"><b><span style="font-size: 14px;">UNIVERSITAS PERJUANGAN TASIKMALAYA</span></b></font><br>
+                            <font size="5"><b><span style="font-size: 14px;">FAKULTAS TEKNIK</span></b></font><br>
+                            <font size="3"><i><span style="font-size: 11px;">Jalan Pembela Tanah Air (PETA) No. 177 Kota Tasikmalaya, Kode Pos 46115</span></i></font><br>
+                            <font size="3"><i><span style="font-size: 11px;">Telepon (0265) 326058, laman : http://www.unper.ac.id</span></i></font>
+                        </center>
+                    </td>
+                    <td style="width: 110px; text-align: right;">
+                        <img src="https://raw.githubusercontent.com/EgiRahmatulloh/Logo/515b4b45417676e20e79f06fad8437d91c97c2cb/image.png" alt="Logo Yayasan" style="width: 110px; height: 110px; display: block; margin: 0 auto;" onerror="this.onerror=null;this.src=\'https://placehold.co/110x110/cccccc/333333?text=Logo\';">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="3"><hr style="border: 1px solid black;"></td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
 
-    // Tambahkan template surat pengantar KP
+        <table width="450" style="border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td colspan="3" style="text-align: center;">
+                        <font size="3"><b><u>SURAT KETERANGAN LULUS</u></b></font><br>
+                        <font size="2"><u>Nomor : SKL/FT-UP/............</u></font>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br><br>
+
+        <table width="450" style="border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td><font size="2">Dengan ini menyatakan bahwa :</font></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+
+        <table width="450" style="border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td width="80"><font size="2">Nama</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">...........................</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">NIP/NIDN/NUPTK</font></td>
+                    <td><font size="10">:</font></td>
+                    <td><font size="2">...........................</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">Jabatan Akademik</font></td>
+                    <td><font size="10">:</font></td>
+                    <td><font size="2">...........................</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">Jabatan</font></td>
+                    <td><font size="10">:</font></td>
+                    <td><font size="2">Dekan</font></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+
+        <table width="450" style="border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td><font size="2">Menerangkan dengan sesungguhnya bahwa :</font></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+
+        <table width="450" style="border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td width="80"><font size="2">Nama</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">...........................</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">NIM</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">...........................</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">Jurusan/Prodi</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">...........................</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">Fakultas</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">Teknik</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">Jenjang</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">S - 1</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">Status Awal Masuk</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">...........................</font></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+
+        <table width="450" style="border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td><font size="2">Telah dinyatakan LULUS berdasarkan keputusan sidang yudisium pada :</font></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+
+        <table width="450" style="border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td width="80"><font size="2">Semester</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">...........................</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">Tahun Akademik</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">...........................</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">Tanggal Lulus / Yudisium</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">... (tanggal) ___, (bulan) ___, ... (tahun) ___</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">Nilai Skripsi</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">...........................</font></td>
+                </tr>
+                <tr>
+                    <td><font size="2">IPK/SKS</font></td>
+                    <td width="10"><font size="2">:</font></td>
+                    <td><font size="2">_____ / ___</font></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br>
+
+        <table width="450" style="border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td><font size="2">Surat keterangan ini diberikan untuk dapat dipergunakan sebagaimana mestinya dan dibuat dalam proses penyelesaian dan berlaku sampai dengan tanggal diterbitkannya ijazah. Demikian surat keterangan ini dibuat, agar dapat dipergunakan sebagaimana mestinya.</font></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <br><br>
+
+        <table width="450" style="border-collapse: collapse;">
+            <tbody>
+                <tr>
+                    <td width="225" style="text-align: left; vertical-align: top;">
+                        <font size="2">
+                        &nbsp;
+                        </font>
+                    </td>
+                    <td width="225" style="text-align: left; vertical-align: top;">
+                        <font size="2">
+                        Diterbitkan di Tasikmalaya<br>
+                        Pada Tanggal ___ bulan, tahun<br>
+                        Dekan,
+                        <br><br><br>
+                        tanda tangan dan cap jabatan
+                        <br><br><br>
+                        NAMA PEJABAT<br>
+                        NIP/NIDN/NUPTK/NIDN ___________
+                        </font>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>',
+      'aktif' => true
+    ]);
     \App\Models\TemplateSurat::create([
-      'nama_template' => 'Surat Pengantar KP',
-      'html_content' => '<center>
-      <table width="450">
-        <tr>
-          <td><img src="{{ asset(\'dashmin/img/logo_cetak.svg\') }}" width="110" height="110" /></td>
-          <td style="font-family: \'Times New Roman\', Times, serif; font-size: 13px">
-            <center>
-              <font size="5"><b>PEMERINTAH KOTA LHOKSEUMAWE</b> </font><br />
-              <font size="4"><b>KECAMATAN MUARA DUA</b></font
-              ><br />
-              <font size="5"><b>GAMPONG PAYA PUNTEUET</b></font
-              ><br />
-              <font size="3"><i>JLN. Tgk, WAHAB DAHLAWI KM.1</i></font
-              ><br />
-            </center>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="2"><hr style="border: 1px solid" /></td>
-        </tr>
-      </table>
-      <br />
-      <table width="450">
-        <tr>
-          <td style="font-family: \'Times New Roman\', Times, serif; font-size: 18px; text-align: center; font-weight: bold" class="text">
-            <u>SURAT PENGANTAR KERJA PRAKTEK</u>
-          </td>
-        </tr>
-        <tr>
-          <td style="text-align: center">Nomor : {{ $data->nomor }}/{{ $data->kodeSurat }}/{{ $data->noSurat }}/{{ $data->tahun }}</td>
-        </tr>
-      </table>
-      <br />
-      <table width="450" style="text-align: justify">
-        <tr>
-          <td>Yang bertanda tangan di bawah ini:</td>
-        </tr>
-      </table>
-      <br />
-      <table width="450">
-        <tr>
-          <td width="150">Nama</td>
-          <td width="10">:</td>
-          <td>{{ $data->namaTtd }}</td>
-        </tr>
-        <tr>
-          <td>Jabatan</td>
-          <td>:</td>
-          <td>{{ $data->ttd }}</td>
-        </tr>
-      </table>
-      <br />
-      <table width="450" style="text-align: justify">
-        <tr>
-          <td>Dengan ini menerangkan bahwa:</td>
-        </tr>
-      </table>
-      <br />
-      <table width="450">
-        <tr>
-          <td width="150">Nama</td>
-          <td width="10">:</td>
-          <td>{{ $data->nama }}</td>
-        </tr>
-        <tr>
-          <td>NIM</td>
-          <td>:</td>
-          <td>{{ $data->nim }}</td>
-        </tr>
-        <tr>
-          <td>Judul KP</td>
-          <td>:</td>
-          <td>{{ $data->judul }}</td>
-        </tr>
-      </table>
-      <br />
-      <table width="450" style="text-align: justify">
-        <tr>
-          <td>Adalah benar mahasiswa yang akan melaksanakan Kerja Praktek di {{ $data->tujuan }} dengan alamat {{ $data->alamatInstitusi }}.</td>
-        </tr>
-        <tr>
-          <td>Demikian surat pengantar ini kami berikan untuk dapat dipergunakan sebagaimana mestinya.</td>
-        </tr>
-      </table>
-      <br /><br /><br />
-      <table width="450">
-        <tr>
-          <td width="300"></td>
-          <td style="text-align: left">Paya Punteuet, {{ date(\'d M Y\', strtotime($data->tglSurat)); }}</td>
-        </tr>
-        <tr>
-          <td width="300"></td>
-          <td style="text-align: left">{{ $data->ttd }}</td>
-        </tr>
-      </table>
-      <br /><br />
-      <table width="450" style="margin-bottom: 100px">
-        <tr>
-            <td width="300"></td>
-            <td style="text-align: left">{{ $data->namaTtd }}</td>
-        </tr>
-      </table>
-    </center>',
+      'nama_template' => 'Surat Keputusan Dekan',
+      'konten_template' => '<center>
+  <div style="text-align: center;">
+    <img src="https://raw.githubusercontent.com/EgiRahmatulloh/Logo/refs/heads/main/logo_unper.png" width="90" height="90" style="display: block; margin-left: auto; margin-right: auto;">
+    <div style="font-family: \'Times New Roman\', Times, serif; font-size: 16px; margin-top: 5px;">
+      <strong>KEPUTUSAN</strong><br>
+      <strong>DEKAN FAKULTAS TEKNIK UNIVERSITAS PERJUANGAN TASIKMALAYA</strong><br>
+      <u>NOMOR</u> : {{ $data->noSurat }} / SK/Dek.FT-UP/(bulan)....../tahun.......
+    </div>
+  </div>
+
+  <br>
+
+  <table width="600">
+    <tbody><tr>
+      <td style="text-align: center; font-weight: bold;">
+        Tentang
+      </td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">.............................................................</td>
+    </tr>
+    <tr>
+      <td style="text-align: center;">.............................................................</td>
+    </tr>
+  </tbody></table>
+
+  <br><br>
+
+  <table width="600" style="font-family: \'Times New Roman\', Times, serif; font-size: 14px;">
+    <tbody><tr>
+      <td>Menimbang</td>
+      <td>: a. bahwa ...............................................................</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>&nbsp;&nbsp;&nbsp; b. bahwa ...............................................................</td>
+    </tr>
+    <tr>
+      <td>Mengingat</td>
+      <td>: 1. bahwa ...............................................................</td>
+    </tr>
+  </tbody></table>
+
+  <br>
+
+  <table width="600">
+    <tbody><tr>
+      <td style="text-align: center; font-weight: bold;">
+        MEMUTUSKAN
+      </td>
+    </tr>
+  </tbody></table>
+
+  <br>
+
+  <table width="600" style="font-family: \'Times New Roman\', Times, serif; font-size: 14px;">
+    <tbody><tr>
+      <td style="width: 100px;">Menetapkan</td>
+      <td>: ..................................................................................</td>
+    </tr>
+    <tr>
+      <td>KESATU</td>
+      <td>: ..................................................................................</td>
+    </tr>
+    <tr>
+      <td>KEDUA</td>
+      <td>: ..................................................................................</td>
+    </tr>
+    <tr>
+      <td>KETIGA</td>
+      <td>: ..................................................................................</td>
+    </tr>
+    <tr>
+      <td>KE (dst)</td>
+      <td>: Keputusan ini mulai berlaku pada tanggal ditetapkan dan apabila dikemudian hari <br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ternyata terdapat kekeliruan maka akan diadakan perbaikan sebagaimana mestinya.
+      </td>
+    </tr>
+  </tbody></table>
+
+  <br><br>
+
+  <table width="600" style="font-family: \'Times New Roman\', Times, serif; font-size: 14px;">
+    <tbody><tr>
+      <td style="width: 300px;"></td>
+      <td style="text-align: left;">Ditetapkan di ......................................</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td style="text-align: left;">Pada tanggal ....................................</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td style="text-align: left;"><b>Dekan Fakultas Teknik<br>Universitas Perjuangan Tasikmalaya</b></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><br><br><br>Tanda tangan dan cap jabatan</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><u>NAMA PEJABAT</u><br>NIP/NIDN/NUPTK/NIDN : ................................</td>
+    </tr>
+  </tbody></table>
+</center>',
       'aktif' => true
     ]);
   }

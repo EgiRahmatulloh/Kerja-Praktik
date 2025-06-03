@@ -39,11 +39,13 @@
                             <label for="template_surat_id" class="form-label">Template Surat <span class="text-danger">*</span></label>
                             <select class="form-select @error('template_surat_id') is-invalid @enderror" id="template_surat_id" name="template_surat_id" required>
                                 <option value="">Pilih Template</option>
-                                @foreach($templates as $template)
-                                <option value="{{ $template->id }}" {{ old('template_surat_id', $letterType->template_surat_id) == $template->id ? 'selected' : '' }}>
+                                @forelse($templates as $template)
+                                <option value="{{ $template->id }}" {{ (old('template_surat_id') ?? $letterType->template_surat_id) == $template->id ? 'selected' : '' }}>
                                     {{ $template->nama_template }}
                                 </option>
-                                @endforeach
+                                @empty
+                                <option value="" disabled>Tidak ada template form yang tersedia</option>
+                                @endforelse
                             </select>
                             @error('template_surat_id')
                             <div class="invalid-feedback">

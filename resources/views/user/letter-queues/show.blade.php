@@ -47,7 +47,7 @@
                                     @if($queue->filledLetter->no_surat)
                                     <tr>
                                         <th>Nomor Surat</th>
-                                        <td>{{ $queue->filledLetter->no_surat }}/{{ $queue->filledLetter->kode_surat }}</td>
+                                        <td>{{ $queue->filledLetter->no_surat }}</td>
                                     </tr>
                                     @endif
                                 </table>
