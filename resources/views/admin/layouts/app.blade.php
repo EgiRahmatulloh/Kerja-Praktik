@@ -194,6 +194,16 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.surat-form.*') ? 'active' : '' }}" href="{{ route('admin.surat-form.index') }}">
+                    <i class="bi bi-file-earmark-plus"></i> <span>Surat Form</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.surat-non-form.*') ? 'active' : '' }}" href="{{ route('admin.surat-non-form.index') }}">
+                    <i class="bi bi-file-earmark"></i> <span>Surat Non-Form</span>
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.data-items.*') ? 'active' : '' }}" href="{{ route('admin.data-items.index') }}">
                     <i class="bi bi-list-check"></i> <span>Variabel Surat</span>
                 </a>

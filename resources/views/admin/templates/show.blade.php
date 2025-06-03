@@ -8,9 +8,19 @@
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Detail Template Surat</h5>
             <div>
-                <a href="{{ route('admin.templates.index') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Kembali
-                </a>
+                @if($template->kategori_surat === 'form')
+                    <a href="{{ route('admin.surat-form.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
+                @elseif($template->kategori_surat === 'non_form')
+                    <a href="{{ route('admin.surat-non-form.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
+                @else
+                    <a href="{{ route('admin.templates.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
+                @endif
                 <a href="{{ route('admin.templates.edit', $template->id) }}" class="btn btn-warning">
                     <i class="bi bi-pencil"></i> Edit
                 </a>

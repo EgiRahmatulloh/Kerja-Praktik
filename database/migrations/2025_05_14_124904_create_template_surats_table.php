@@ -16,8 +16,10 @@ return new class extends Migration
         Schema::create('template_surats', function (Blueprint $table) {
             $table->id();
             $table->string('nama_template');
+            $table->string('kode_surat', 10)->nullable();
             $table->text('konten_template');
             $table->boolean('aktif')->default(true);
+            $table->enum('kategori_surat', ['default', 'form', 'non_form'])->default('default');
             $table->timestamps();
         });
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\TemplateSurat;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class TemplateSuratController extends Controller
 {
@@ -15,9 +16,19 @@ class TemplateSuratController extends Controller
     }
     
     // Menampilkan daftar template surat
-    public function index()
+    public function index(Request $request)
     {
-        $templates = TemplateSurat::latest()->paginate(10);
+        $query = TemplateSurat::query();
+        
+        // Filter berdasarkan kategori jika ada parameter
+        if ($request->has('kategori')) {
+            $query->where('kategori_surat', $request->kategori);
+        } else {
+            // Default menampilkan kategori 'default'
+            $query->where('kategori_surat', 'default');
+        }
+        
+        $templates = $query->latest()->paginate(10);
         return view('admin.templates.index', compact('templates'));
     }
     
@@ -34,8 +45,12 @@ class TemplateSuratController extends Controller
             'nama_template' => 'required|string|max:255',
             'kode_surat' => 'required|string|max:10|unique:template_surats,kode_surat',
             'konten_template' => 'required|string',
-            'aktif' => 'boolean'
+            'aktif' => 'boolean',
+            'kategori_surat' => 'required|in:default,form,non_form'
         ]);
+        
+        // Set kategori default sebagai 'default'
+        $validated['kategori_surat'] = 'default';
         
         TemplateSurat::create($validated);
         
@@ -66,22 +81,82 @@ class TemplateSuratController extends Controller
             'nama_template' => 'required|string|max:255',
             'kode_surat' => 'required|string|max:10|unique:template_surats,kode_surat,' . $id,
             'konten_template' => 'required|string',
-            'aktif' => 'boolean'
+            'aktif' => 'boolean',
+            'kategori_surat' => 'required|in:default,form,non_form',
+            'action_type' => 'required|in:update_original,save_as_new'
         ]);
         
-        $template->update($validated);
+        if ($request->action_type === 'save_as_new') {
+            // Buat template baru dengan kategori yang dipilih
+            $newTemplate = $template->replicate();
+            $newTemplate->kategori_surat = $validated['kategori_surat'];
+            $newTemplate->nama_template = $validated['nama_template'];
+            $newTemplate->kode_surat = $validated['kode_surat'];
+            $newTemplate->konten_template = $validated['konten_template'];
+            $newTemplate->save();
+            
+            $kategoriText = $validated['kategori_surat'] === 'form' ? 'Form' : ($validated['kategori_surat'] === 'non_form' ? 'Non-Form' : 'Default');
+            $message = 'Template surat baru berhasil disimpan dengan kategori ' . $kategoriText . '.';
+            $kategori = $validated['kategori_surat'];
+        } else {
+            // Update template asli
+            $template->update($validated);
+            $message = 'Template surat berhasil diperbarui.';
+            $kategori = $template->kategori_surat;
+        }
         
-        return redirect()->route('admin.templates.index')
-            ->with('success', 'Template surat berhasil diperbarui.');
+        // Redirect berdasarkan kategori
+        if ($kategori === 'form') {
+            $route = 'admin.surat-form.index';
+        } elseif ($kategori === 'non_form') {
+            $route = 'admin.surat-non-form.index';
+        } else {
+            $route = 'admin.templates.index';
+        }
+        
+        return redirect()->route($route)
+            ->with('success', $message);
     }
     
     // Menghapus template surat
     public function destroy($id)
     {
         $template = TemplateSurat::findOrFail($id);
+        $kategori = $template->kategori_surat;
         $template->delete();
         
-        return redirect()->route('admin.templates.index')
+        // Redirect berdasarkan kategori
+        if ($kategori === 'form') {
+            $route = 'admin.surat-form.index';
+        } elseif ($kategori === 'non_form') {
+            $route = 'admin.surat-non-form.index';
+        } else {
+            $route = 'admin.templates.index';
+        }
+        
+        return redirect()->route($route)
             ->with('success', 'Template surat berhasil dihapus.');
+    }
+
+    // Menghasilkan file PDF dari template surat
+    public function generatePdf($id)
+    {
+        $template = TemplateSurat::findOrFail($id);
+        
+        // Pastikan hanya template non-form yang bisa di-generate PDF
+        if ($template->kategori_surat !== 'non_form') {
+            return redirect()->back()->with('error', 'Hanya template surat non-form yang dapat di-generate PDF.');
+        }
+        
+        // Konten template untuk PDF
+        $content = $template->konten_template;
+        
+        // Generate PDF
+        $pdf = Pdf::loadView('print.template_pdf', [
+            'template' => $template,
+            'content' => $content
+        ]);
+        
+        return $pdf->stream('template_' . $template->nama_template . '.pdf');
     }
 }

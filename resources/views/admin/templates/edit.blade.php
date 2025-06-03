@@ -7,12 +7,28 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Edit Template Surat</h5>
-            <a href="{{ route('admin.templates.index') }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Kembali
-            </a>
+            @if($template->kategori_surat === 'form')
+                <a href="{{ route('admin.surat-form.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            @elseif($template->kategori_surat === 'non_form')
+                <a href="{{ route('admin.surat-non-form.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            @else
+                <a href="{{ route('admin.templates.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Kembali
+                </a>
+            @endif
         </div>
         <div class="card-body">
-            <form action="{{ route('admin.templates.update', $template->id) }}" method="POST">
+            @if($template->kategori_surat === 'form')
+                <form action="{{ route('admin.surat-form.update', $template->id) }}" method="POST">
+            @elseif($template->kategori_surat === 'non_form')
+                <form action="{{ route('admin.surat-non-form.update', $template->id) }}" method="POST">
+            @else
+                <form action="{{ route('admin.templates.update', $template->id) }}" method="POST">
+            @endif
                 @csrf
                 @method('PUT')
 
@@ -44,12 +60,32 @@
                 </div>
 
                 <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="kategori_surat" class="form-label">Kategori Surat <span class="text-danger">*</span></label>
+                            <select class="form-control @error('kategori_surat') is-invalid @enderror" id="kategori_surat" name="kategori_surat" required>
+                                <option value="default" {{ old('kategori_surat', $template->kategori_surat ?? 'default') === 'default' ? 'selected' : '' }}>Template Default</option>
+                                <option value="form" {{ old('kategori_surat', $template->kategori_surat) === 'form' ? 'selected' : '' }}>Surat dengan Form</option>
+                                <option value="non_form" {{ old('kategori_surat', $template->kategori_surat) === 'non_form' ? 'selected' : '' }}>Surat tanpa Form</option>
+                            </select>
+                            <div class="form-text">Pilih kategori untuk menentukan menu penyimpanan surat</div>
+                            @error('kategori_surat')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                            @enderror
+                        </div>
+                    </div>
 
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label for="deskripsi" class="form-label">Deskripsi</label>
-                            <input type="text" class="form-control @error('deskripsi') is-invalid @enderror" id="deskripsi" name="deskripsi" value="{{ old('deskripsi', $template->deskripsi) }}">
-                            @error('deskripsi')
+                            <label for="action_type" class="form-label">Aksi Penyimpanan <span class="text-danger">*</span></label>
+                            <select class="form-control @error('action_type') is-invalid @enderror" id="action_type" name="action_type" required>
+                                <option value="update_original" {{ old('action_type') === 'update_original' ? 'selected' : '' }}>Update Template Asli</option>
+                                <option value="save_as_new" {{ old('action_type') === 'save_as_new' ? 'selected' : '' }}>Simpan sebagai Template Baru</option>
+                            </select>
+                            <div class="form-text">Pilih untuk update template asli atau buat template baru</div>
+                            @error('action_type')
                             <div class="invalid-feedback">
                                 {{ $message }}
                             </div>
@@ -75,9 +111,19 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> Simpan Perubahan
                     </button>
-                    <a href="{{ route('admin.templates.show', $template->id) }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-x"></i> Batal
-                    </a>
+                    @if($template->kategori_surat === 'form')
+                        <a href="{{ route('admin.surat-form.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x"></i> Batal
+                        </a>
+                    @elseif($template->kategori_surat === 'non_form')
+                        <a href="{{ route('admin.surat-non-form.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x"></i> Batal
+                        </a>
+                    @else
+                        <a href="{{ route('admin.templates.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x"></i> Batal
+                        </a>
+                    @endif
                 </div>
             </form>
         </div>

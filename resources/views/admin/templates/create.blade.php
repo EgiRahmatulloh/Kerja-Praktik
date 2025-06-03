@@ -42,20 +42,8 @@
                     </div>
                 </div>
 
-                <div class="row mb-3">
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="deskripsi" class="form-label">Deskripsi</label>
-                            <input type="text" class="form-control @error('deskripsi') is-invalid @enderror" id="deskripsi" name="deskripsi" value="{{ old('deskripsi') }}">
-                            @error('deskripsi')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
+                <!-- Hidden input untuk kategori default -->
+                <input type="hidden" name="kategori_surat" value="default">
 
                 <div class="form-group mb-3">
                     <label for="html_content" class="form-label">Kode HTML Template <span class="text-danger">*</span></label>
