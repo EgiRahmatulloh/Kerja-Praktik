@@ -16,7 +16,6 @@ class TemplateSuratSeeder extends Seeder
   {
     \App\Models\TemplateSurat::create([
       'nama_template' => 'Surat Keterangan Domisili',
-      'kode_surat' => 'DOM',
       'konten_template' => '<center>
       <table width="450">
         <tr>
@@ -120,7 +119,6 @@ class TemplateSuratSeeder extends Seeder
 
     \App\Models\TemplateSurat::create([
       'nama_template' => 'Surat Keterangan Usaha',
-      'kode_surat' => 'USH',
       'konten_template' => '<center>
       <table width="450">
         <tr>
@@ -226,7 +224,6 @@ class TemplateSuratSeeder extends Seeder
     // Tambahkan template surat pengantar KP
     \App\Models\TemplateSurat::create([
       'nama_template' => 'Surat Pengantar KP',
-      'kode_surat' => 'KP',
       'html_content' => '<center>
       <table width="450">
         <tr>

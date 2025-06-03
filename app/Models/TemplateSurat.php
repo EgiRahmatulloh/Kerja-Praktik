@@ -11,7 +11,6 @@ class TemplateSurat extends Model
 
     protected $fillable = [
         'nama_template',
-        'kode_surat',
         'konten_template',
         'html_content',
         'aktif',

@@ -88,13 +88,7 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="kode_surat" class="form-label">Kode Surat</label>
-                                    <input type="text" class="form-control" id="kode_surat" value="{{ $letter->kode_surat }}" readonly>
-                                    <div class="form-text">Kode surat diambil otomatis dari template surat</div>
-                                </div>
-                            </div>
+
 
                             <div class="col-md-6">
                                 <div class="form-group">

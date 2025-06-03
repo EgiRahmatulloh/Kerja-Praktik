@@ -17,7 +17,6 @@ return new class extends Migration
             $table->id();
             $table->string('nama_jenis');
             $table->text('deskripsi')->nullable();
-            $table->string('kode_surat', 10)->nullable();
             $table->boolean('is_public')->default(true);
             $table->foreignId('template_surat_id')->constrained('template_surats')->onDelete('cascade');
             $table->integer('last_number')->default(0);

@@ -13,7 +13,6 @@ class LetterType extends Model
         'nama_jenis',
         'deskripsi',
         'template_surat_id',
-        'kode_surat',
         'last_number',
         'is_public'
     ];

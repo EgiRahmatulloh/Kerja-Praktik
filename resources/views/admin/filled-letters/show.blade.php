@@ -60,10 +60,7 @@
                             <th>No. Surat</th>
                             <td>{{ $letter->no_surat ?: '-' }}</td>
                         </tr>
-                        <tr>
-                            <th>Kode Surat</th>
-                            <td>{{ $letter->kode_surat ?: '-' }}</td>
-                        </tr>
+
                         @endif
                         @if($letter->catatan_admin)
                         <tr>

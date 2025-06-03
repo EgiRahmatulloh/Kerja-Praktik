@@ -43,7 +43,6 @@ class TemplateSuratController extends Controller
     {
         $validated = $request->validate([
             'nama_template' => 'required|string|max:255',
-            'kode_surat' => 'required|string|max:10|unique:template_surats,kode_surat',
             'konten_template' => 'required|string',
             'aktif' => 'boolean',
             'kategori_surat' => 'required|in:default,form,non_form'
@@ -79,7 +78,6 @@ class TemplateSuratController extends Controller
         
         $validated = $request->validate([
             'nama_template' => 'required|string|max:255',
-            'kode_surat' => 'required|string|max:10|unique:template_surats,kode_surat,' . $id,
             'konten_template' => 'required|string',
             'aktif' => 'boolean',
             'kategori_surat' => 'required|in:default,form,non_form',
@@ -91,7 +89,6 @@ class TemplateSuratController extends Controller
             $newTemplate = $template->replicate();
             $newTemplate->kategori_surat = $validated['kategori_surat'];
             $newTemplate->nama_template = $validated['nama_template'];
-            $newTemplate->kode_surat = $validated['kode_surat'];
             $newTemplate->konten_template = $validated['konten_template'];
             $newTemplate->save();
             

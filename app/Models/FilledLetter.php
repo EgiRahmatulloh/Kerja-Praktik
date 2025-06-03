@@ -15,7 +15,6 @@ class FilledLetter extends Model
         'filled_data',
         'status',
         'no_surat',
-        'kode_surat',
         'catatan_admin'
     ];
     

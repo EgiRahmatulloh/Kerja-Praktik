@@ -20,7 +20,6 @@
                         <tr>
                             <th>No</th>
                             <th>Nama Template</th>
-                            <th>Kode Surat</th>
                             <th>Kategori</th>
                             <th>Tanggal Dibuat</th>
                             <th>Aksi</th>
@@ -31,7 +30,6 @@
                         <tr>
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $template->nama_template }}</td>
-                            <td>{{ $template->kode_surat }}</td>
                             <td>
                                 @if($template->kategori_surat === 'form')
                                     Form
@@ -93,7 +91,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center">Tidak ada template surat</td>
+                            <td colspan="5" class="text-center">Tidak ada template surat</td>
                         </tr>
                         @endforelse
                     </tbody>

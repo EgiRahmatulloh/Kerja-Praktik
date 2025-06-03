@@ -28,18 +28,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="kode_surat" class="form-label">Kode Surat <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control @error('kode_surat') is-invalid @enderror" id="kode_surat" name="kode_surat" value="{{ old('kode_surat') }}" required maxlength="10" placeholder="Contoh: DOM, USH">
-                            <div class="form-text">Kode surat digunakan untuk format nomor surat (contoh: DOM/001/2025)</div>
-                            @error('kode_surat')
-                            <div class="invalid-feedback">
-                                {{ $message }}
-                            </div>
-                            @enderror
-                        </div>
-                    </div>
+
                 </div>
 
                 <div class="row mb-3">

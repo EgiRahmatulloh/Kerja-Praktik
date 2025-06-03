@@ -37,7 +37,6 @@ class LetterTypeController extends Controller
         $validated = $request->validate([
             'nama_jenis' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'kode_surat' => 'required|string|max:10|unique:letter_types,kode_surat',
             'template_surat_id' => 'required|exists:template_surats,id',
             'is_public' => 'boolean',
             'data_items' => 'required|array',
@@ -47,7 +46,6 @@ class LetterTypeController extends Controller
         $letterType = LetterType::create([
             'nama_jenis' => $validated['nama_jenis'],
             'deskripsi' => $validated['deskripsi'],
-            'kode_surat' => $validated['kode_surat'],
             'template_surat_id' => $validated['template_surat_id'],
             'is_public' => $request->has('is_public') ? $request->is_public : false,
             'last_number' => 0
@@ -85,7 +83,6 @@ class LetterTypeController extends Controller
         $validated = $request->validate([
             'nama_jenis' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'kode_surat' => 'required|string|max:10|unique:letter_types,kode_surat,' . $id,
             'template_surat_id' => 'required|exists:template_surats,id',
             'is_public' => 'boolean',
             'data_items' => 'required|array',
@@ -95,7 +92,6 @@ class LetterTypeController extends Controller
         $letterType->update([
             'nama_jenis' => $validated['nama_jenis'],
             'deskripsi' => $validated['deskripsi'],
-            'kode_surat' => $validated['kode_surat'],
             'template_surat_id' => $validated['template_surat_id'],
             'is_public' => $request->has('is_public') ? $request->is_public : false
         ]);

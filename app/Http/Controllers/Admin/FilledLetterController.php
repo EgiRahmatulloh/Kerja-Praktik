@@ -208,10 +208,6 @@ class FilledLetterController extends Controller
             // Ambil jenis surat
             $letterType = $letter->letterType;
 
-            // Set kode surat dari template surat
-            $templateSurat = $letterType->templateSurat;
-            $updateData['kode_surat'] = $templateSurat->kode_surat;
-
             // Tambahkan surat ke antrian jika statusnya diubah menjadi approved
             // dan belum ada di antrian
             if (!$letter->queue) {

@@ -20,7 +20,6 @@ return new class extends Migration
             $table->text('filled_data'); // JSON berisi key => nilai
             $table->string('status', 50)->default('pending');
             $table->string('no_surat', 100)->nullable();
-            $table->string('kode_surat', 100)->nullable();
             $table->text('catatan_admin')->nullable();
             $table->timestamps();
         });
