@@ -46,8 +46,33 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Dashboard
     Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    // Template Surat
-    Route::resource('templates', TemplateSuratController::class);
+    // Template Surat - Default (Menu Utama)
+    Route::get('templates', [TemplateSuratController::class, 'index'])->name('templates.index');
+    Route::get('templates/create', [TemplateSuratController::class, 'create'])->name('templates.create');
+    Route::post('templates', [TemplateSuratController::class, 'store'])->name('templates.store');
+    Route::get('templates/{template}', [TemplateSuratController::class, 'show'])->name('templates.show');
+    Route::get('templates/{template}/edit', [TemplateSuratController::class, 'edit'])->name('templates.edit');
+    Route::put('templates/{template}', [TemplateSuratController::class, 'update'])->name('templates.update');
+    Route::delete('templates/{template}', [TemplateSuratController::class, 'destroy'])->name('templates.destroy');
+    Route::get('templates/{id}/pdf', [TemplateSuratController::class, 'generatePdf'])->name('templates.pdf');
+
+    // Surat Form
+    Route::get('surat-form', function() {
+        return app(TemplateSuratController::class)->index(request()->merge(['kategori' => 'form']));
+    })->name('surat-form.index');
+    Route::get('surat-form/{template}', [TemplateSuratController::class, 'show'])->name('surat-form.show');
+    Route::get('surat-form/{template}/edit', [TemplateSuratController::class, 'edit'])->name('surat-form.edit');
+    Route::put('surat-form/{template}', [TemplateSuratController::class, 'update'])->name('surat-form.update');
+    Route::delete('surat-form/{template}', [TemplateSuratController::class, 'destroy'])->name('surat-form.destroy');
+
+    // Surat Non-Form
+    Route::get('surat-non-form', function() {
+        return app(TemplateSuratController::class)->index(request()->merge(['kategori' => 'non_form']));
+    })->name('surat-non-form.index');
+    Route::get('surat-non-form/{template}', [TemplateSuratController::class, 'show'])->name('surat-non-form.show');
+    Route::get('surat-non-form/{template}/edit', [TemplateSuratController::class, 'edit'])->name('surat-non-form.edit');
+    Route::put('surat-non-form/{template}', [TemplateSuratController::class, 'update'])->name('surat-non-form.update');
+    Route::delete('surat-non-form/{template}', [TemplateSuratController::class, 'destroy'])->name('surat-non-form.destroy');
 
     // Data Item (Variabel)
     Route::resource('data-items', DataItemController::class);

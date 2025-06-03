@@ -14,7 +14,8 @@ class TemplateSurat extends Model
         'kode_surat',
         'konten_template',
         'html_content',
-        'aktif'
+        'aktif',
+        'kategori_surat'
     ];
     
     // Alias untuk html_content

@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('label', 255);
             $table->string('tipe_input', 50);
             $table->text('opsi')->nullable();
+            $table->boolean('required')->default(false);
+            $table->string('help_text')->nullable();
             $table->timestamps();
         });
     }
