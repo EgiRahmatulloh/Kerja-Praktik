@@ -146,9 +146,10 @@ class ServiceScheduleController extends Controller
      */
     private function adjustPausedQueues($schedule)
     {
-        // Ambil semua antrian dengan status waiting
+        // Ambil semua antrian dengan status waiting dan urutkan berdasarkan ID
+        // untuk memastikan urutan yang konsisten
         $waitingQueues = LetterQueue::where('status', 'waiting')
-            ->orderBy('scheduled_date', 'asc')
+            ->orderBy('id', 'asc')
             ->get();
 
         if ($waitingQueues->isEmpty()) {
@@ -161,49 +162,51 @@ class ServiceScheduleController extends Controller
         $pauseEndTime = Carbon::parse($schedule->pause_end_time);
         $processingTime = $schedule->processing_time;
 
-        // Kelompokkan antrian berdasarkan tanggal
-        $queuesByDate = $waitingQueues->groupBy(function ($queue) {
-            return $queue->scheduled_date->format('Y-m-d');
-        });
+        // Cek apakah ada antrian yang dijadwalkan selama waktu jeda
+        $hasPausedQueue = false;
+        $firstPausedQueueIndex = -1;
 
-        foreach ($queuesByDate as $date => $queues) {
-            // Atur jadwal untuk setiap antrian pada tanggal ini
-            $nextScheduledDate = null;
-            $queueDate = Carbon::parse($date);
+        foreach ($waitingQueues as $index => $queue) {
+            $queueDateTime = Carbon::parse($queue->scheduled_date);
+            $queueTime = Carbon::parse($queueDateTime->format('H:i:s'));
 
-            // Waktu akhir jeda pada tanggal ini
-            $pauseEndDateTime = Carbon::parse($pauseEndTime->format('H:i:s'))->setDateFrom($queueDate);
-
-            // Waktu selesai pelayanan pada tanggal ini
-            $endDateTime = Carbon::parse($endTime->format('H:i:s'))->setDateFrom($queueDate);
-
-            foreach ($queues as $queue) {
-                $queueDateTime = Carbon::parse($queue->scheduled_date);
-                $queueTime = Carbon::parse($queueDateTime->format('H:i:s'));
-
-                // Jika waktu antrian berada dalam rentang jadwal yang dijeda
-                if ($queueTime->between($startTime, $pauseEndTime)) {
-                    // Jika ini adalah antrian pertama yang dijadwalkan ulang pada hari ini
-                    if (!$nextScheduledDate) {
-                        // Jadwalkan antrian setelah waktu selesai jeda
-                        $nextScheduledDate = $pauseEndDateTime->copy();
-                    }
-
-                    // Jika jadwal melebihi jam selesai pelayanan, pindahkan ke hari berikutnya
-                    if ($nextScheduledDate->gt($endDateTime)) {
-                        $nextDay = $queueDate->copy()->addDay();
-                        $nextScheduledDate = Carbon::parse($startTime->format('H:i:s'))->setDateFrom($nextDay);
-                    }
-
-                    // Update jadwal antrian
-                    $queue->update([
-                        'scheduled_date' => $nextScheduledDate,
-                    ]);
-
-                    // Siapkan jadwal untuk antrian berikutnya
-                    $nextScheduledDate = $nextScheduledDate->copy()->addMinutes($processingTime);
-                }
+            // Jika waktu antrian berada dalam rentang jadwal yang dijeda
+            if ($queueTime->between($startTime, $pauseEndTime)) {
+                $hasPausedQueue = true;
+                $firstPausedQueueIndex = $index;
+                break;
             }
+        }
+
+        // Jika tidak ada antrian yang terjeda, tidak perlu menyesuaikan
+        if (!$hasPausedQueue) {
+            return;
+        }
+
+        // Mulai jadwal dari waktu akhir jeda
+        $queueDate = Carbon::parse($waitingQueues[$firstPausedQueueIndex]->scheduled_date->format('Y-m-d'));
+        $nextScheduledDate = Carbon::parse($pauseEndTime->format('H:i:s'))->setDateFrom($queueDate);
+        $endDateTime = Carbon::parse($endTime->format('H:i:s'))->setDateFrom($queueDate);
+
+        // Jadwalkan ulang semua antrian mulai dari antrian yang terjeda
+        for ($i = $firstPausedQueueIndex; $i < count($waitingQueues); $i++) {
+            $queue = $waitingQueues[$i];
+
+            // Jika jadwal melebihi jam selesai pelayanan, pindahkan ke hari berikutnya
+            if ($nextScheduledDate->gt($endDateTime)) {
+                $nextDay = $queueDate->copy()->addDay();
+                $queueDate = $nextDay; // Update tanggal antrian untuk hari berikutnya
+                $nextScheduledDate = Carbon::parse($startTime->format('H:i:s'))->setDateFrom($nextDay);
+                $endDateTime = Carbon::parse($endTime->format('H:i:s'))->setDateFrom($nextDay);
+            }
+
+            // Update jadwal antrian
+            $queue->update([
+                'scheduled_date' => $nextScheduledDate->copy(),
+            ]);
+
+            // Siapkan jadwal untuk antrian berikutnya
+            $nextScheduledDate = $nextScheduledDate->copy()->addMinutes($processingTime);
         }
     }
 }

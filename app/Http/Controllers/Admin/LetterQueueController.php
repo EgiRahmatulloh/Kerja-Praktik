@@ -212,27 +212,70 @@ class LetterQueueController extends Controller
 
         // Mulai dari jadwal antrian yang baru saja diperbarui
         $nextScheduledDate = \Carbon\Carbon::parse($startQueue->scheduled_date)->copy()->addMinutes($processingTime);
+        $currentDate = $nextScheduledDate->format('Y-m-d');
+        $startTime = \Carbon\Carbon::parse($serviceSchedule->start_time)->setDateFrom($currentDate);
+        $endTime = \Carbon\Carbon::parse($serviceSchedule->end_time)->setDateFrom($currentDate);
+
+        // Periksa apakah jadwal pelayanan sedang dijeda
+        $isPaused = $serviceSchedule->is_paused;
+        $pauseEndTime = $isPaused ? \Carbon\Carbon::parse($serviceSchedule->pause_end_time) : null;
 
         foreach ($followingQueues as $queue) {
             // Pastikan masih dalam jam pelayanan
             $scheduleDate = $nextScheduledDate->format('Y-m-d');
-            $startTime = \Carbon\Carbon::parse($serviceSchedule->start_time)->setDateFrom($scheduleDate);
-            $endTime = \Carbon\Carbon::parse($serviceSchedule->end_time)->setDateFrom($scheduleDate);
+
+            // Jika tanggal berubah, perbarui waktu mulai dan selesai
+            if ($scheduleDate !== $currentDate) {
+                $currentDate = $scheduleDate;
+                $startTime = \Carbon\Carbon::parse($serviceSchedule->start_time)->setDateFrom($currentDate);
+                $endTime = \Carbon\Carbon::parse($serviceSchedule->end_time)->setDateFrom($currentDate);
+            }
+
+            // Periksa apakah jadwal pelayanan sedang dijeda
+            if ($isPaused) {
+                $pauseEndTimeForDay = \Carbon\Carbon::parse($pauseEndTime->format('H:i:s'))->setDateFrom($scheduleDate);
+
+                // Jika waktu terjadwal berada dalam rentang jeda
+                if (
+                    $nextScheduledDate->format('H:i:s') >= $startTime->format('H:i:s') &&
+                    $nextScheduledDate->format('H:i:s') < $pauseEndTimeForDay->format('H:i:s')
+                ) {
+                    // Jadwalkan setelah waktu jeda selesai
+                    $nextScheduledDate = $pauseEndTimeForDay->copy();
+                }
+            }
 
             // Jika jadwal melebihi jam selesai pelayanan, pindahkan ke hari kerja berikutnya
             if ($nextScheduledDate->gt($endTime)) {
                 $nextDay = \Carbon\Carbon::parse($scheduleDate)->addDay();
+                $currentDate = $nextDay->format('Y-m-d');
                 $nextScheduledDate = \Carbon\Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextDay);
+                $startTime = \Carbon\Carbon::parse($serviceSchedule->start_time)->setDateFrom($currentDate);
+                $endTime = \Carbon\Carbon::parse($serviceSchedule->end_time)->setDateFrom($currentDate);
+
+                // Periksa lagi apakah jadwal pelayanan sedang dijeda untuk hari berikutnya
+                if ($isPaused) {
+                    $pauseEndTimeForDay = \Carbon\Carbon::parse($pauseEndTime->format('H:i:s'))->setDateFrom($currentDate);
+
+                    // Jika waktu terjadwal berada dalam rentang jeda
+                    if (
+                        $nextScheduledDate->format('H:i:s') >= $startTime->format('H:i:s') &&
+                        $nextScheduledDate->format('H:i:s') < $pauseEndTimeForDay->format('H:i:s')
+                    ) {
+                        // Jadwalkan setelah waktu jeda selesai
+                        $nextScheduledDate = $pauseEndTimeForDay->copy();
+                    }
+                }
             }
 
             // Jika jadwal sebelum jam mulai pelayanan, pindahkan ke jam mulai pelayanan
             if ($nextScheduledDate->lt($startTime)) {
-                $nextScheduledDate = $startTime;
+                $nextScheduledDate = $startTime->copy();
             }
 
             // Update jadwal antrian
             $queue->update([
-                'scheduled_date' => $nextScheduledDate,
+                'scheduled_date' => $nextScheduledDate->copy(),
             ]);
 
             // Siapkan jadwal untuk antrian berikutnya
