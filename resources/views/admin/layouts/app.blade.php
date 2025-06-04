@@ -218,11 +218,7 @@
                     <i class="fa fa-clock"></i> <span>Jadwal Pelayanan</span>
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link {{ request()->routeIs('admin.announcements.*') ? 'active' : '' }}" href="{{ route('admin.announcements.index') }}">
-                    <i class="bi bi-megaphone"></i> <span>Pengumuman</span>
-                </a>
-            </li>
+            <!-- Menu pengumuman telah dihapus -->
             <li class="nav-item">
                 <a class="nav-link {{ request()->routeIs('admin.filled-letters.*') ? 'active' : '' }}" href="{{ route('admin.filled-letters.index') }}">
                     <i class="bi bi-envelope"></i> <span>Pengajuan Surat</span>
