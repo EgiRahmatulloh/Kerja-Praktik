@@ -57,7 +57,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('templates/{id}/pdf', [TemplateSuratController::class, 'generatePdf'])->name('templates.pdf');
 
     // Surat Form
-    Route::get('surat-form', function() {
+    Route::get('surat-form', function () {
         return app(TemplateSuratController::class)->index(request()->merge(['kategori' => 'form']));
     })->name('surat-form.index');
     Route::get('surat-form/{template}', [TemplateSuratController::class, 'show'])->name('surat-form.show');
@@ -66,7 +66,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::delete('surat-form/{template}', [TemplateSuratController::class, 'destroy'])->name('surat-form.destroy');
 
     // Surat Non-Form
-    Route::get('surat-non-form', function() {
+    Route::get('surat-non-form', function () {
         return app(TemplateSuratController::class)->index(request()->merge(['kategori' => 'non_form']));
     })->name('surat-non-form.index');
     Route::get('surat-non-form/{template}', [TemplateSuratController::class, 'show'])->name('surat-non-form.show');
@@ -117,7 +117,7 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'user'])->group(functi
     Route::get('/letters/{id}', [LetterController::class, 'show'])->name('letters.show');
     Route::get('/letters/{id}/edit', [LetterController::class, 'edit'])->name('letters.edit');
     Route::put('/letters/{id}', [LetterController::class, 'update'])->name('letters.update');
-    Route::get('/letters/{id}/download', [LetterController::class, 'download'])->name('letters.download');
+    // Route download telah dihapus
 
     // Antrian Surat
     Route::get('/letter-queues', [UserLetterQueueController::class, 'index'])->name('letter-queues.index');
