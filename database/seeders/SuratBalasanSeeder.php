@@ -45,7 +45,7 @@ class SuratBalasanSeeder extends Seeder
     <table width="450" style="border-collapse: collapse; margin-top: 10px;">
         <tbody>
             <tr>
-                <td colspan="3" style="text-align: right;"><font size="2">Tempat, tanggal ...............................</font></td>
+                <td colspan="3" style="text-align: right;"><font size="2">Tasikmalaya, {{ \$tanggal }}</font></td>
             </tr>
         </tbody>
     </table>
@@ -57,7 +57,7 @@ class SuratBalasanSeeder extends Seeder
             <tr>
                 <td width="70"><font size="2">Nomor</font></td>
                 <td width="10"><font size="2">:</font></td>
-                <td><font size="2">....../SPm/FT-UP/bulan......./tahun.......</font></td>
+                <td><font size="2">{{ $no_surat }}/SPm/FT-UP/{{ $data->bulan }}/{{ $data->tahun }}</font></td>
             </tr>
             <tr>
                 <td><font size="2">Lampiran</font></td>

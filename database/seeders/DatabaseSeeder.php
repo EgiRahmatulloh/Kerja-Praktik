@@ -44,7 +44,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             TemplateSuratSeeder::class,
             DataItemSeeder::class,
-            LetterTypeSeeder::class,
             SuratPemberitahuanSeeder::class,
             SuratBalasanSeeder::class,
             SuratKuasaSeeder::class,

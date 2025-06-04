@@ -46,7 +46,7 @@ class TemplateSuratSeeder extends Seeder
        <table width="450" style="border-collapse: collapse; margin-top: 10px;">
            <tbody>
                <tr>
-                   <td colspan="3" style="text-align: right;"><font size="2">Tempat,tanggal.......</font></td>
+                   <td colspan="3" style="text-align: right;"><font size="2">Tasikmalaya, {{ \$tanggal }}</font></td>
                </tr>
            </tbody>
        </table>
@@ -180,7 +180,7 @@ class TemplateSuratSeeder extends Seeder
                 <tr>
                     <td colspan="3" style="text-align: center;">
                         <font size="3"><b><u>SURAT KETERANGAN LULUS</u></b></font><br>
-                        <font size="2"><u>Nomor : SKL/FT-UP/............</u></font>
+                        <font size="2"><u>Nomor : {{ $no_surat }}/SKL/FT-UP/{{ $data->bulan }}/{{ $data->tahun }}</u></font>
                     </td>
                 </tr>
             </tbody>
@@ -297,7 +297,7 @@ class TemplateSuratSeeder extends Seeder
                 <tr>
                     <td><font size="2">Tanggal Lulus / Yudisium</font></td>
                     <td width="10"><font size="2">:</font></td>
-                    <td><font size="2">... (tanggal) ___, (bulan) ___, ... (tahun) ___</font></td>
+                    <td><font size="2">{{ $tanggal }} {{ $data->bulan }} {{ $data->tahun }}</font></td>
                 </tr>
                 <tr>
                     <td><font size="2">Nilai Skripsi</font></td>
@@ -335,7 +335,7 @@ class TemplateSuratSeeder extends Seeder
                     <td width="225" style="text-align: left; vertical-align: top;">
                         <font size="2">
                         Diterbitkan di Tasikmalaya<br>
-                        Pada Tanggal ___ bulan, tahun<br>
+                        Pada Tanggal {{ $tanggal }} {{ $data->bulan }}, {{ $data->tahun }}<br>
                         Dekan,
                         <br><br><br>
                         tanda tangan dan cap jabatan
@@ -358,7 +358,7 @@ class TemplateSuratSeeder extends Seeder
     <div style="font-family: \'Times New Roman\', Times, serif; font-size: 16px; margin-top: 5px;">
       <strong>KEPUTUSAN</strong><br>
       <strong>DEKAN FAKULTAS TEKNIK UNIVERSITAS PERJUANGAN TASIKMALAYA</strong><br>
-      <u>NOMOR</u> : {{ $data->noSurat }} / SK/Dek.FT-UP/(bulan)....../tahun.......
+      <u>NOMOR</u> : {{ $data->noSurat }} / SK/Dek.FT-UP/{{ $data->bulan }}/{{ $data->tahun }}
     </div>
   </div>
 
@@ -437,11 +437,11 @@ class TemplateSuratSeeder extends Seeder
   <table width="600" style="font-family: \'Times New Roman\', Times, serif; font-size: 14px;">
     <tbody><tr>
       <td style="width: 300px;"></td>
-      <td style="text-align: left;">Ditetapkan di ......................................</td>
+      <td style="text-align: left;">Ditetapkan di Tasikmalaya</td>
     </tr>
     <tr>
       <td></td>
-      <td style="text-align: left;">Pada tanggal ....................................</td>
+      <td style="text-align: left;">Pada tanggal {{ \$tanggal }}</td>
     </tr>
     <tr>
       <td></td>

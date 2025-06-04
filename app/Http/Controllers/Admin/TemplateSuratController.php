@@ -148,6 +148,34 @@ class TemplateSuratController extends Controller
         // Konten template untuk PDF
         $content = $template->konten_template;
         
+        // Proses placeholder bulan dan tahun
+        $currentMonth = date('m');
+        $currentYear = date('Y');
+        
+        // Ganti placeholder bulan
+        $content = str_replace("{{ \$data->bulan }}", $currentMonth, $content);
+        $content = str_replace("{{{ \$data->bulan }}}", $currentMonth, $content);
+        $content = str_replace("{{\$data->bulan}}", $currentMonth, $content);
+        $content = str_replace("{{ \$bulan }}", $currentMonth, $content);
+        $content = str_replace("{{{ \$bulan }}}", $currentMonth, $content);
+        $content = str_replace("{{\$bulan}}", $currentMonth, $content);
+        
+        // Ganti placeholder tahun
+        $content = str_replace("{{ \$data->tahun }}", $currentYear, $content);
+        $content = str_replace("{{{ \$data->tahun }}}", $currentYear, $content);
+        $content = str_replace("{{\$data->tahun}}", $currentYear, $content);
+        $content = str_replace("{{ \$tahun }}", $currentYear, $content);
+        $content = str_replace("{{{ \$tahun }}}", $currentYear, $content);
+        $content = str_replace("{{\$tahun}}", $currentYear, $content);
+        
+        // Ganti format gabungan /bulan/tahun
+        $content = str_replace("/{{ \$data->bulan }}/{{ \$data->tahun }}", "/$currentMonth/$currentYear", $content);
+        $content = str_replace("/{{{ \$data->bulan }}}/{{{ \$data->tahun }}}", "/$currentMonth/$currentYear", $content);
+        $content = str_replace("/{{\$data->bulan}}/{{\$data->tahun}}", "/$currentMonth/$currentYear", $content);
+        $content = str_replace("/{{ \$bulan }}/{{ \$tahun }}", "/$currentMonth/$currentYear", $content);
+        $content = str_replace("/{{{ \$bulan }}}/{{{ \$tahun }}}", "/$currentMonth/$currentYear", $content);
+        $content = str_replace("/{{\$bulan}}/{{\$tahun}}", "/$currentMonth/$currentYear", $content);
+        
         // Generate PDF
         $pdf = Pdf::loadView('print.template_pdf', [
             'template' => $template,

@@ -49,7 +49,7 @@ class BeritaAcaraSeeder extends Seeder
                 <tr>
                     <td colspan="3" style="text-align: center;">
                         <font size="3"><b>BERITA ACARA</b></font><br>
-                        <font size="2"><u>Nomor : ......./BA/FT-UP/............</u></font>
+                        <font size="2"><u>Nomor : {{ $no_surat }}/BA/FT-UP/{{ $data->bulan }}/{{ $data->tahun }}</u></font>
                     </td>
                 </tr>
             </tbody>
@@ -60,7 +60,7 @@ class BeritaAcaraSeeder extends Seeder
         <table width="450" style="border-collapse: collapse;">
             <tbody>
                 <tr>
-                    <td><font size="2">Pada hari ini, .............<u>tanggal</u>........., bulan .....<u>tahun</u>......, kami masing - masing:</font></td>
+                    <td><font size="2">Pada hari ini, {{ $tanggal }}, bulan {{ $data->bulan }} {{ $data->tahun }}, kami masing - masing:</font></td>
                 </tr>
             </tbody>
         </table>

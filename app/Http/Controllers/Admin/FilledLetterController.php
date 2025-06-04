@@ -315,17 +315,31 @@ class FilledLetterController extends Controller
         $renderedContent = str_replace("{{ date('d M Y', strtotime(\$data->tglSurat)); }}", $formattedDate, $renderedContent);
         $renderedContent = str_replace("{{ date('d M\nY', strtotime(\$data-\n>tglSurat)); }}", $formattedDate, $renderedContent);
 
-        // Ganti variabel tahun dengan format MM/YYYY
-        $currentMonthYear = date('m/Y');
-        $renderedContent = str_replace("{{ \$data->tahun }}", $currentMonthYear, $renderedContent);
-        $renderedContent = str_replace("{{ \$tahun }}", $currentMonthYear, $renderedContent);
-        // Juga antisipasi jika placeholder hanya untuk bulan atau hanya tahun secara terpisah
+        // Ganti variabel bulan dan tahun
         $currentMonth = date('m');
         $currentYear = date('Y');
+        
+        // Ganti placeholder bulan
         $renderedContent = str_replace("{{ \$data->bulan }}", $currentMonth, $renderedContent);
+        $renderedContent = str_replace("{{{ \$data->bulan }}}", $currentMonth, $renderedContent);
+        $renderedContent = str_replace("{{\$data->bulan}}", $currentMonth, $renderedContent);
         $renderedContent = str_replace("{{ \$bulan }}", $currentMonth, $renderedContent);
-        // Jika {{ $data->tahun }} atau {{ $tahun }} memang hanya untuk tahun, pastikan ada juga yang diganti dengan tahun saja
-        // Namun, berdasarkan permintaan, kita prioritaskan MM/YYYY untuk placeholder tahun
+        $renderedContent = str_replace("{{{ \$bulan }}}", $currentMonth, $renderedContent);
+        $renderedContent = str_replace("{{\$bulan}}", $currentMonth, $renderedContent);
+        
+        // Ganti placeholder tahun
+        $renderedContent = str_replace("{{ \$data->tahun }}", $currentYear, $renderedContent);
+        $renderedContent = str_replace("{{{ \$data->tahun }}}", $currentYear, $renderedContent);
+        $renderedContent = str_replace("{{\$data->tahun}}", $currentYear, $renderedContent);
+        $renderedContent = str_replace("{{ \$tahun }}", $currentYear, $renderedContent);
+        $renderedContent = str_replace("{{{ \$tahun }}}", $currentYear, $renderedContent);
+        $renderedContent = str_replace("{{\$tahun}}", $currentYear, $renderedContent);
+        
+        // Ganti format gabungan /bulan/tahun
+        $renderedContent = str_replace("/{{ \$data->bulan }}/{{ \$data->tahun }}", "/$currentMonth/$currentYear", $renderedContent);
+        $renderedContent = str_replace("/{{\$data->bulan}}/{{\$data->tahun}}", "/$currentMonth/$currentYear", $renderedContent);
+        $renderedContent = str_replace("/{{ \$bulan }}/{{ \$tahun }}", "/$currentMonth/$currentYear", $renderedContent);
+        $renderedContent = str_replace("/{{\$bulan}}/{{\$tahun}}", "/$currentMonth/$currentYear", $renderedContent);
 
         // Ganti variabel ttd dan namaTtd
         if (isset($letter->filled_data['ttd'])) {
@@ -402,17 +416,31 @@ class FilledLetterController extends Controller
         $renderedContent = str_replace("{{ date('d M Y', strtotime(\$data->tglSurat)); }}", $formattedDate, $renderedContent);
         $renderedContent = str_replace("{{ date('d M\nY', strtotime(\$data-\n>tglSurat)); }}", $formattedDate, $renderedContent);
 
-        // Ganti variabel tahun dengan format MM/YYYY
-        $currentMonthYear = date('m/Y');
-        $renderedContent = str_replace("{{ \$data->tahun }}", $currentMonthYear, $renderedContent);
-        $renderedContent = str_replace("{{ \$tahun }}", $currentMonthYear, $renderedContent);
-        // Juga antisipasi jika placeholder hanya untuk bulan atau hanya tahun secara terpisah
+        // Ganti variabel bulan dan tahun
         $currentMonth = date('m');
         $currentYear = date('Y');
+        
+        // Ganti placeholder bulan
         $renderedContent = str_replace("{{ \$data->bulan }}", $currentMonth, $renderedContent);
+        $renderedContent = str_replace("{{{ \$data->bulan }}}", $currentMonth, $renderedContent);
+        $renderedContent = str_replace("{{\$data->bulan}}", $currentMonth, $renderedContent);
         $renderedContent = str_replace("{{ \$bulan }}", $currentMonth, $renderedContent);
-        // Jika {{ $data->tahun }} atau {{ $tahun }} memang hanya untuk tahun, pastikan ada juga yang diganti dengan tahun saja
-        // Namun, berdasarkan permintaan, kita prioritaskan MM/YYYY untuk placeholder tahun
+        $renderedContent = str_replace("{{{ \$bulan }}}", $currentMonth, $renderedContent);
+        $renderedContent = str_replace("{{\$bulan}}", $currentMonth, $renderedContent);
+        
+        // Ganti placeholder tahun
+        $renderedContent = str_replace("{{ \$data->tahun }}", $currentYear, $renderedContent);
+        $renderedContent = str_replace("{{{ \$data->tahun }}}", $currentYear, $renderedContent);
+        $renderedContent = str_replace("{{\$data->tahun}}", $currentYear, $renderedContent);
+        $renderedContent = str_replace("{{ \$tahun }}", $currentYear, $renderedContent);
+        $renderedContent = str_replace("{{{ \$tahun }}}", $currentYear, $renderedContent);
+        $renderedContent = str_replace("{{\$tahun}}", $currentYear, $renderedContent);
+        
+        // Ganti format gabungan /bulan/tahun
+        $renderedContent = str_replace("/{{ \$data->bulan }}/{{ \$data->tahun }}", "/$currentMonth/$currentYear", $renderedContent);
+        $renderedContent = str_replace("/{{\$data->bulan}}/{{\$data->tahun}}", "/$currentMonth/$currentYear", $renderedContent);
+        $renderedContent = str_replace("/{{ \$bulan }}/{{ \$tahun }}", "/$currentMonth/$currentYear", $renderedContent);
+        $renderedContent = str_replace("/{{\$bulan}}/{{\$tahun}}", "/$currentMonth/$currentYear", $renderedContent);
 
         // Ganti variabel ttd dan namaTtd
         if (isset($letter->filled_data['ttd'])) {

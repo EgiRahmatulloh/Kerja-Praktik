@@ -49,7 +49,7 @@ class SuratKuasaSeeder extends Seeder
                 <tr>
                     <td colspan="3" style="text-align: center;">
                         <font size="3"><b>SURAT KUASA</b></font><br>
-                        <font size="2">Nomor : ......./SKu/FT-UP/............</font>
+                        <font size="2">Nomor : {{ \$no_surat }}/SKu/FT-UP/{{ \$data->bulan }}/{{ \$data->tahun }}</font>
                     </td>
                 </tr>
             </tbody>
@@ -132,7 +132,7 @@ class SuratKuasaSeeder extends Seeder
                 <tr>
                     <td width="225" style="text-align: left; vertical-align: top;">
                         <font size="2">
-                        <u>Tanggal</u> ......................
+                        <u>Tasikmalaya</u> ......................
                         <br><br>
                         Penerima Kuasa,
                         <br><br><br><br>
