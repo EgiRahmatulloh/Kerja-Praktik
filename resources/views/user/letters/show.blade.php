@@ -61,9 +61,7 @@
                 <div class="mt-4">
                     <a href="{{ route('user.letters.history') }}" class="btn btn-secondary">Kembali</a>
 
-                    @if($letter->status == 'approved' || $letter->status == 'dicetak')
-                    <a href="{{ route('user.letters.download', $letter->id) }}" class="btn btn-success">Download PDF</a>
-                    @endif
+                    <!-- Tombol download telah dihapus -->
 
                     @if($letter->status == 'rejected')
                     <a href="{{ route('user.letters.edit', $letter->id) }}" class="btn btn-warning">Edit Surat</a>

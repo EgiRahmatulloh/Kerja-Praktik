@@ -48,9 +48,7 @@
                                 <td>
                                     <a href="{{ route('user.letters.show', $letter->id) }}" class="btn btn-sm btn-info">Detail</a>
 
-                                    @if($letter->status == 'approved' || $letter->status == 'dicetak')
-                                    <a href="{{ route('user.letters.download', $letter->id) }}" class="btn btn-sm btn-success">Download</a>
-                                    @endif
+                                    <!-- Tombol download telah dihapus -->
 
                                     @if($letter->status == 'rejected')
                                     <a href="{{ route('user.letters.edit', $letter->id) }}" class="btn btn-sm btn-warning">Edit</a>

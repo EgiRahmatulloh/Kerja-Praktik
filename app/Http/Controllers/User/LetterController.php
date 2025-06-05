@@ -183,19 +183,5 @@ class LetterController extends Controller
             ->with('success', 'Surat berhasil diedit dan sedang menunggu persetujuan admin.');
     }
 
-    /**
-     * Download PDF surat yang sudah disetujui
-     */
-    public function download($id)
-    {
-        $letter = FilledLetter::where('user_id', Auth::id())
-            ->where(function ($query) {
-                $query->where('status', 'approved')
-                    ->orWhere('status', 'dicetak');
-            })
-            ->findOrFail($id);
-
-        // Redirect ke route admin untuk generate PDF
-        return redirect()->route('admin.filled-letters.pdf', $letter->id);
-    }
+    // Metode download telah dihapus
 }
