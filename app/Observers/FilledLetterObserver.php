@@ -66,10 +66,10 @@ class FilledLetterObserver
                             $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($tomorrow);
                         }
 
-                        $scheduledDate = $startTime;
+                        $scheduledDate = $startTime->addDay();
                     } else {
                         // Jadwalkan sesuai waktu proses setelah antrian terakhir
-                        $scheduledDate = Carbon::parse($lastQueue->scheduled_date)->addMinutes($serviceSchedule->processing_time);
+                        $scheduledDate = Carbon::parse($lastQueue->scheduled_date)->addMinutes($serviceSchedule->processing_time)->addDay();
 
                         // Pastikan masih dalam jam pelayanan
                         $scheduleDate = $scheduledDate->format('Y-m-d');

@@ -203,68 +203,6 @@ class FilledLetterController extends Controller
             }
         }
 
-        // Jika status diubah menjadi approved, masukkan ke antrian
-        if ($validated['status'] == 'approved') {
-            // Ambil jenis surat
-            $letterType = $letter->letterType;
-
-            // Tambahkan surat ke antrian jika statusnya diubah menjadi approved
-            // dan belum ada di antrian
-            if (!$letter->queue) {
-                // Cari jadwal pelayanan yang aktif
-                $serviceSchedule = ServiceSchedule::where('is_active', true)->first();
-
-                if (!$serviceSchedule) {
-                    // Jika tidak ada jadwal pelayanan, gunakan default (1 hari dari sekarang)
-                    $scheduledDate = now()->addDay();
-                } else {
-                    // Cari antrian terakhir untuk menentukan jadwal berikutnya
-                    $lastQueue = LetterQueue::where('status', 'waiting')
-                        ->orderBy('scheduled_date', 'desc')
-                        ->first();
-
-                    if (!$lastQueue) {
-                        // Jika belum ada antrian, jadwalkan di awal jam pelayanan hari ini atau besok
-                        $today = Carbon::today();
-                        $now = Carbon::now();
-                        $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($today);
-
-                        // Jika sekarang sudah melewati jam mulai hari ini, jadwalkan besok
-                        if ($now->gt($startTime)) {
-                            $tomorrow = Carbon::tomorrow();
-                            $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($tomorrow);
-                        }
-
-                        $scheduledDate = $startTime;
-                    } else {
-                        // Jadwalkan sesuai waktu proses setelah antrian terakhir
-                        $scheduledDate = Carbon::parse($lastQueue->scheduled_date)->addMinutes($serviceSchedule->processing_time);
-
-                        // Pastikan masih dalam jam pelayanan
-                        $scheduleDate = $scheduledDate->format('Y-m-d');
-                        $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($scheduleDate);
-                        $endTime = Carbon::parse($serviceSchedule->end_time)->setDateFrom($scheduleDate);
-
-                        // Jika jadwal melebihi jam selesai pelayanan, pindahkan ke hari kerja berikutnya
-                        if ($scheduledDate->gt($endTime)) {
-                            $nextDay = Carbon::parse($scheduleDate)->addDay();
-                            $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextDay);
-                        }
-
-                        // Jika jadwal sebelum jam mulai pelayanan, pindahkan ke jam mulai pelayanan
-                        if ($scheduledDate->lt($startTime)) {
-                            $scheduledDate = $startTime;
-                        }
-                    }
-                }
-
-                LetterQueue::create([
-                    'filled_letter_id' => $letter->id,
-                    'scheduled_date' => $scheduledDate,
-                    'status' => 'waiting'
-                ]);
-            }
-        }
 
         $letter->update($updateData);
 
