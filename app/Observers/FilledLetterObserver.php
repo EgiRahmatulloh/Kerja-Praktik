@@ -66,10 +66,18 @@ class FilledLetterObserver
                             $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($tomorrow);
                         }
 
-                        $scheduledDate = $startTime->addDay();
+                        // Pastikan minimal H+1
+                        $tomorrow = Carbon::tomorrow();
+                        $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($tomorrow);
                     } else {
                         // Jadwalkan sesuai waktu proses setelah antrian terakhir
-                        $scheduledDate = Carbon::parse($lastQueue->scheduled_date)->addMinutes($serviceSchedule->processing_time)->addDay();
+                        $scheduledDate = Carbon::parse($lastQueue->scheduled_date)->addMinutes($serviceSchedule->processing_time);
+                        
+                        // Pastikan minimal H+1
+                        $minDate = Carbon::tomorrow()->startOfDay();
+                        if ($scheduledDate->lt($minDate)) {
+                            $scheduledDate = $minDate->copy()->setTimeFromTimeString($serviceSchedule->start_time);
+                        }
 
                         // Pastikan masih dalam jam pelayanan
                         $scheduleDate = $scheduledDate->format('Y-m-d');
