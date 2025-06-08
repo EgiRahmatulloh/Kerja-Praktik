@@ -5,6 +5,7 @@ namespace App\Observers;
 use App\Models\FilledLetter;
 use App\Models\LetterQueue;
 use App\Models\ServiceSchedule;
+use App\Services\HolidayService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
@@ -55,20 +56,10 @@ class FilledLetterObserver
                         ->first();
 
                     if (!$lastQueue) {
-                        // Jika belum ada antrian, jadwalkan di awal jam pelayanan hari ini atau besok
-                        $today = Carbon::today();
-                        $now = Carbon::now();
-                        $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($today);
-
-                        // Jika sekarang sudah melewati jam mulai hari ini, jadwalkan besok
-                        if ($now->gt($startTime)) {
-                            $tomorrow = Carbon::tomorrow();
-                            $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($tomorrow);
-                        }
-
-                        // Pastikan minimal H+1
-                        $tomorrow = Carbon::tomorrow();
-                        $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($tomorrow);
+                        // Jika belum ada antrian, jadwalkan di awal jam pelayanan hari kerja berikutnya
+                        $holidayService = new HolidayService();
+                        $nextWorkingDay = $holidayService->getNextWorkingDay(Carbon::today());
+                        $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
                     } else {
                         // Jadwalkan sesuai waktu proses setelah antrian terakhir
                         $scheduledDate = Carbon::parse($lastQueue->scheduled_date)->addMinutes($serviceSchedule->processing_time);
@@ -76,23 +67,33 @@ class FilledLetterObserver
                         // Pastikan minimal H+1
                         $minDate = Carbon::tomorrow()->startOfDay();
                         if ($scheduledDate->lt($minDate)) {
-                            $scheduledDate = $minDate->copy()->setTimeFromTimeString($serviceSchedule->start_time);
-                        }
+                            $holidayService = new HolidayService();
+                            $nextWorkingDay = $holidayService->getNextWorkingDay(Carbon::today());
+                            $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
+                        } else {
+                            // Pastikan masih dalam jam pelayanan
+                            $scheduleDate = $scheduledDate->format('Y-m-d');
+                            $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($scheduleDate);
+                            $endTime = Carbon::parse($serviceSchedule->end_time)->setDateFrom($scheduleDate);
 
-                        // Pastikan masih dalam jam pelayanan
-                        $scheduleDate = $scheduledDate->format('Y-m-d');
-                        $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($scheduleDate);
-                        $endTime = Carbon::parse($serviceSchedule->end_time)->setDateFrom($scheduleDate);
+                            // Jika jadwal melebihi jam selesai pelayanan, pindahkan ke hari kerja berikutnya
+                            if ($scheduledDate->gt($endTime)) {
+                                $holidayService = new HolidayService();
+                                $nextWorkingDay = $holidayService->getNextWorkingDay(Carbon::parse($scheduleDate));
+                                $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
+                            }
 
-                        // Jika jadwal melebihi jam selesai pelayanan, pindahkan ke hari kerja berikutnya
-                        if ($scheduledDate->gt($endTime)) {
-                            $nextDay = Carbon::parse($scheduleDate)->addDay();
-                            $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextDay);
-                        }
-
-                        // Jika jadwal sebelum jam mulai pelayanan, pindahkan ke jam mulai pelayanan
-                        if ($scheduledDate->lt($startTime)) {
-                            $scheduledDate = $startTime;
+                            // Jika jadwal sebelum jam mulai pelayanan, pindahkan ke jam mulai pelayanan
+                            if ($scheduledDate->lt($startTime)) {
+                                $scheduledDate = $startTime;
+                            }
+                            
+                            // Pastikan tanggal yang dijadwalkan bukan hari libur
+                            $holidayService = new HolidayService();
+                            if ($holidayService->isHoliday($scheduledDate)) {
+                                $nextWorkingDay = $holidayService->getNextWorkingDay($scheduledDate);
+                                $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
+                            }
                         }
                     }
                 }

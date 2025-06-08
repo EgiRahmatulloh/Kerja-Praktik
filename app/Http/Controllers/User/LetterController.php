@@ -57,22 +57,12 @@ class LetterController extends Controller
             }
         }
 
-        // Cari nomor terakhir untuk jenis surat ini
-        $lastLetter = FilledLetter::where('letter_type_id', $letterType->id)
-            ->orderBy('no_surat', 'desc')
-            ->first();
-
-        if ($lastLetter) {
-            // Increment nomor terakhir
-            $nextNumber = intval($lastLetter->no_surat) + 1;
-        } else {
-            // Jika belum ada surat dengan kode ini, mulai dari 1
-            $nextNumber = 1;
-        }
-
-        // Update last_number di letterType
-        $letterType->last_number = $nextNumber;
-        $letterType->save();
+        // Generate nomor surat global (tidak tergantung jenis surat)
+        $currentNumber = \App\Models\SystemSetting::get('global_letter_number', 0);
+        $nextNumber = intval($currentNumber) + 1;
+        
+        // Update nomor global di system settings
+        \App\Models\SystemSetting::set('global_letter_number', $nextNumber, 'Nomor surat global untuk semua jenis surat');
 
         // Set nomor surat dengan format 3 digit
         $noSurat = sprintf('%03d', $nextNumber);

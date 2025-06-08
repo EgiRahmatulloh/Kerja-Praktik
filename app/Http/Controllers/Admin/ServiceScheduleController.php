@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ServiceSchedule;
 use App\Models\LetterQueue;
+use App\Services\HolidayService;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -192,12 +193,22 @@ class ServiceScheduleController extends Controller
         for ($i = $firstPausedQueueIndex; $i < count($waitingQueues); $i++) {
             $queue = $waitingQueues[$i];
 
-            // Jika jadwal melebihi jam selesai pelayanan, pindahkan ke hari berikutnya
+            // Jika jadwal melebihi jam selesai pelayanan, pindahkan ke hari kerja berikutnya
             if ($nextScheduledDate->gt($endDateTime)) {
-                $nextDay = $queueDate->copy()->addDay();
-                $queueDate = $nextDay; // Update tanggal antrian untuk hari berikutnya
-                $nextScheduledDate = Carbon::parse($startTime->format('H:i:s'))->setDateFrom($nextDay);
-                $endDateTime = Carbon::parse($endTime->format('H:i:s'))->setDateFrom($nextDay);
+                $holidayService = new HolidayService();
+                $nextWorkingDay = $holidayService->getNextWorkingDay($queueDate);
+                $queueDate = $nextWorkingDay; // Update tanggal antrian untuk hari kerja berikutnya
+                $nextScheduledDate = Carbon::parse($startTime->format('H:i:s'))->setDateFrom($nextWorkingDay);
+                $endDateTime = Carbon::parse($endTime->format('H:i:s'))->setDateFrom($nextWorkingDay);
+            }
+            
+            // Pastikan tanggal yang dijadwalkan bukan hari libur
+            $holidayService = new HolidayService();
+            if ($holidayService->isHoliday($nextScheduledDate)) {
+                $nextWorkingDay = $holidayService->getNextWorkingDay($nextScheduledDate);
+                $queueDate = $nextWorkingDay;
+                $nextScheduledDate = Carbon::parse($startTime->format('H:i:s'))->setDateFrom($nextWorkingDay);
+                $endDateTime = Carbon::parse($endTime->format('H:i:s'))->setDateFrom($nextWorkingDay);
             }
 
             // Update jadwal antrian

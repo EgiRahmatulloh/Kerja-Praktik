@@ -12,6 +12,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Barryvdh\DomPDF\Facade\Pdf;
+use PhpOffice\PhpWord\PhpWord;
+use PhpOffice\PhpWord\IOFactory;
+use PhpOffice\PhpWord\Shared\Html;
+use PhpOffice\PhpWord\TemplateProcessor;
 
 class FilledLetterController extends Controller
 {
@@ -305,7 +309,7 @@ class FilledLetterController extends Controller
             $letter->update(['status' => 'printed']);
         }
 
-        return $this->generatePdf($id);
+        return $this->generateDocx($id);
     }
 
     // Menghasilkan file PDF dari surat
@@ -408,5 +412,105 @@ class FilledLetterController extends Controller
 
         $pdf = Pdf::loadView('print.letter_pdf', ['letter' => $letter, 'renderedContent' => $renderedContent]);
         return $pdf->stream('surat_' . $letter->letterType->name . '_' . $letter->id . '.pdf');
+    }
+
+    // Menghasilkan file DOCX dari surat
+    public function generateDocx($id)
+    {
+        $letter = FilledLetter::with(['user', 'letterType', 'letterType.templateSurat'])
+            ->findOrFail($id);
+
+        $template = $letter->letterType->templateSurat;
+        
+        // Ambil path file template DOCX
+        $templatePath = $template->full_path;
+        
+        // Pastikan file template ada
+        if (!file_exists($templatePath)) {
+            abort(404, 'Template file tidak ditemukan');
+        }
+        
+        // Baca template DOCX yang sudah ada
+        $templateProcessor = new TemplateProcessor($templatePath);
+
+        // Ganti semua variabel dengan nilai sebenarnya menggunakan TemplateProcessor
+        foreach ($letter->filled_data as $key => $value) {
+            // Format variabel untuk PHPWord template processor
+            $templateProcessor->setValue($key, $value);
+            $templateProcessor->setValue('data.' . $key, $value);
+        }
+
+        // Format nomor surat
+        $formattedNoSurat = $letter->no_surat;
+        $templateProcessor->setValue('noSurat', $formattedNoSurat);
+        $templateProcessor->setValue('data.noSurat', $formattedNoSurat);
+
+        // Ganti variabel tanggal surat
+        $tglSurat = date('Y-m-d');
+        if (isset($letter->filled_data['tglSurat'])) {
+            $tglSurat = $letter->filled_data['tglSurat'];
+        }
+        $templateProcessor->setValue('tglSurat', $tglSurat);
+        $templateProcessor->setValue('data.tglSurat', $tglSurat);
+        
+        // Format tanggal yang lebih kompleks
+        $formattedDate = date('d M Y', strtotime($tglSurat));
+        $templateProcessor->setValue('formattedDate', $formattedDate);
+        $templateProcessor->setValue('data.formattedDate', $formattedDate);
+
+        // Ganti variabel bulan dan tahun
+        $currentMonth = date('m');
+        $currentYear = date('Y');
+        
+        // Array nama bulan dalam bahasa Indonesia
+        $namaBulan = [
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
+            '04' => 'April', '05' => 'Mei', '06' => 'Juni',
+            '07' => 'Juli', '08' => 'Agustus', '09' => 'September',
+            '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+        ];
+        
+        $bulanHuruf = $namaBulan[$currentMonth];
+        
+        // Bulan dalam format angka
+        $templateProcessor->setValue('bulan', $currentMonth);
+        $templateProcessor->setValue('data.bulan', $currentMonth);
+        
+        // Bulan dalam format huruf
+        $templateProcessor->setValue('bulanHuruf', $bulanHuruf);
+        $templateProcessor->setValue('data.bulanHuruf', $bulanHuruf);
+        
+        // Tahun
+        $templateProcessor->setValue('tahun', $currentYear);
+        $templateProcessor->setValue('data.tahun', $currentYear);
+
+        // Ganti variabel ttd dan namaTtd
+        if (isset($letter->filled_data['ttd'])) {
+            $templateProcessor->setValue('ttd', $letter->filled_data['ttd']);
+            $templateProcessor->setValue('data.ttd', $letter->filled_data['ttd']);
+        }
+
+        if (isset($letter->filled_data['namaTtd'])) {
+            $templateProcessor->setValue('namaTtd', $letter->filled_data['namaTtd']);
+            $templateProcessor->setValue('data.namaTtd', $letter->filled_data['namaTtd']);
+        }
+
+        // Update status surat menjadi printed jika belum
+        if ($letter->status == 'approved') {
+            $letter->update(['status' => 'printed']);
+        }
+        
+        // Simpan hasil template yang sudah diproses
+        // Buat nama file yang unik dengan nama user dan tanggal
+        $userName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $letter->user->name);
+        $letterTypeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $letter->letterType->name);
+        $currentDate = date('Y-m-d');
+        
+        $fileName = $letterTypeName . '_' . $userName . '_' . $currentDate . '_' . $letter->id . '.docx';
+        $tempFile = tempnam(sys_get_temp_dir(), 'phpword');
+        
+        $templateProcessor->saveAs($tempFile);
+        
+        return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
 }

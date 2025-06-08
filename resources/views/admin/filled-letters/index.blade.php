@@ -86,6 +86,9 @@
                                 <a href="{{ route('admin.filled-letters.print', $letter->id) }}" class="btn btn-sm btn-success" target="_blank" title="Print">
                                     <i class="bi bi-printer"></i>
                                 </a>
+                                <a href="{{ route('admin.filled-letters.docx', $letter->id) }}" class="btn btn-sm btn-primary ms-1" title="Download DOCX">
+                                    <i class="bi bi-download"></i>
+                                </a>
                                 @endif
                             </td>
                         </tr>

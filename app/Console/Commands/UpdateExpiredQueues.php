@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Models\LetterQueue;
 use App\Models\ServiceSchedule;
+use App\Services\HolidayService;
 use Carbon\Carbon;
 
 class UpdateExpiredQueues extends Command
@@ -84,8 +85,16 @@ class UpdateExpiredQueues extends Command
 
             // Jika jadwal melebihi jam selesai pelayanan, pindahkan ke hari kerja berikutnya
             if ($scheduledTime->gt($endTime)) {
-                $nextDay = Carbon::parse($scheduleDate)->addDay();
-                $scheduledTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextDay);
+                $holidayService = new HolidayService();
+                $nextWorkingDay = $holidayService->getNextWorkingDay(Carbon::parse($scheduleDate));
+                $scheduledTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
+            }
+            
+            // Pastikan tanggal yang dijadwalkan bukan hari libur
+            $holidayService = new HolidayService();
+            if ($holidayService->isHoliday($scheduledTime)) {
+                $nextWorkingDay = $holidayService->getNextWorkingDay($scheduledTime);
+                $scheduledTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
             }
 
             // Hitung waktu jadwal baru berdasarkan urutan

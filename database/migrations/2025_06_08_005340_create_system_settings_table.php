@@ -13,17 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('template_surats', function (Blueprint $table) {
+        Schema::create('system_settings', function (Blueprint $table) {
             $table->id();
-            $table->string('nama_template');
-            
-            // Menggunakan path file, bukan konten teks/biner
-            $table->string('template_path'); 
-            
-            $table->boolean('aktif')->default(true);
-            
-            // Baris enum 'kategori_surat' sudah DIHAPUS dari sini.
-            
+            $table->string('key')->unique();
+            $table->text('value')->nullable();
+            $table->string('description')->nullable();
             $table->timestamps();
         });
     }
@@ -35,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('template_surats');
+        Schema::dropIfExists('system_settings');
     }
 };

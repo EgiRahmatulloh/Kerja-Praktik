@@ -22,6 +22,9 @@
                 <a href="{{ route('admin.filled-letters.print', $letter->id) }}" class="btn btn-success" target="_blank">
                     <i class="bi bi-printer"></i> Cetak
                 </a>
+                <a href="{{ route('admin.filled-letters.docx', $letter->id) }}" class="btn btn-primary ms-2">
+                    <i class="bi bi-download"></i> Download DOCX
+                </a>
                 @endif
             </div>
         </div>

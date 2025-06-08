@@ -26,7 +26,7 @@ class LetterTypeController extends Controller
     // Menampilkan form untuk membuat jenis surat baru
     public function create()
     {
-        $templates = TemplateSurat::where('aktif', true)->where('kategori_surat', 'form')->get();
+        $templates = TemplateSurat::where('aktif', true)->get();
         $dataItems = DataItem::all();
         return view('admin.letter-types.create', compact('templates', 'dataItems'));
     }
@@ -68,7 +68,7 @@ class LetterTypeController extends Controller
     public function edit($id)
     {
         $letterType = LetterType::with('dataItems')->findOrFail($id);
-        $templates = TemplateSurat::where('aktif', true)->where('kategori_surat', 'form')->get();
+        $templates = TemplateSurat::where('aktif', true)->get();
         $dataItems = DataItem::all();
         $selectedDataItems = $letterType->dataItems->pluck('id')->toArray();
 

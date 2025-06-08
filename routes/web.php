@@ -56,23 +56,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::delete('templates/{template}', [TemplateSuratController::class, 'destroy'])->name('templates.destroy');
     Route::get('templates/{id}/pdf', [TemplateSuratController::class, 'generatePdf'])->name('templates.pdf');
 
-    // Surat Form
-    Route::get('surat-form', function () {
-        return app(TemplateSuratController::class)->index(request()->merge(['kategori' => 'form']));
-    })->name('surat-form.index');
-    Route::get('surat-form/{template}', [TemplateSuratController::class, 'show'])->name('surat-form.show');
-    Route::get('surat-form/{template}/edit', [TemplateSuratController::class, 'edit'])->name('surat-form.edit');
-    Route::put('surat-form/{template}', [TemplateSuratController::class, 'update'])->name('surat-form.update');
-    Route::delete('surat-form/{template}', [TemplateSuratController::class, 'destroy'])->name('surat-form.destroy');
 
-    // Surat Non-Form
-    Route::get('surat-non-form', function () {
-        return app(TemplateSuratController::class)->index(request()->merge(['kategori' => 'non_form']));
-    })->name('surat-non-form.index');
-    Route::get('surat-non-form/{template}', [TemplateSuratController::class, 'show'])->name('surat-non-form.show');
-    Route::get('surat-non-form/{template}/edit', [TemplateSuratController::class, 'edit'])->name('surat-non-form.edit');
-    Route::put('surat-non-form/{template}', [TemplateSuratController::class, 'update'])->name('surat-non-form.update');
-    Route::delete('surat-non-form/{template}', [TemplateSuratController::class, 'destroy'])->name('surat-non-form.destroy');
 
     // Data Item (Variabel)
     Route::resource('data-items', DataItemController::class);
@@ -84,6 +68,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::resource('filled-letters', FilledLetterController::class)->except(['create', 'store', 'destroy']);
     Route::get('filled-letters/{id}/print', [FilledLetterController::class, 'print'])->name('filled-letters.print');
     Route::get('filled-letters/{id}/pdf', [FilledLetterController::class, 'generatePdf'])->name('filled-letters.pdf');
+    Route::get('filled-letters/{id}/docx', [FilledLetterController::class, 'generateDocx'])->name('filled-letters.docx');
     Route::put('filled-letters/{id}/status', [FilledLetterController::class, 'updateStatus'])->name('filled-letters.update-status');
     Route::put('filled-letters/{id}/template', [FilledLetterController::class, 'updateTemplate'])->name('filled-letters.update-template');
 

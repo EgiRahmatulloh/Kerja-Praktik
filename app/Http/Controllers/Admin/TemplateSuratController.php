@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\TemplateSurat;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Storage; // Penting: Ditambahkan untuk manajemen file
 
 class TemplateSuratController extends Controller
 {
@@ -15,173 +15,137 @@ class TemplateSuratController extends Controller
         $this->middleware('admin');
     }
     
-    // Menampilkan daftar template surat
-    public function index(Request $request)
+    /**
+     * Menampilkan daftar semua template surat.
+     * Logika filter kategori sudah dihapus.
+     */
+    public function index()
     {
-        $query = TemplateSurat::query();
-        
-        // Filter berdasarkan kategori jika ada parameter
-        if ($request->has('kategori')) {
-            $query->where('kategori_surat', $request->kategori);
-        } else {
-            // Default menampilkan kategori 'default'
-            $query->where('kategori_surat', 'default');
-        }
-        
-        $templates = $query->latest()->paginate(10);
+        // Query menjadi sangat sederhana
+        $templates = TemplateSurat::latest()->paginate(10);
         return view('admin.templates.index', compact('templates'));
     }
     
-    // Menampilkan form untuk membuat template surat baru
+    /**
+     * Menampilkan form untuk meng-upload template surat baru.
+     * Tidak ada perubahan di sini, tetapi pastikan view 'create' memiliki input tipe file.
+     */
     public function create()
     {
         return view('admin.templates.create');
     }
     
-    // Menyimpan template surat baru
+    /**
+     * Menyimpan template surat baru yang di-upload.
+     * Logika diubah sepenuhnya untuk menangani file upload.
+     */
     public function store(Request $request)
     {
+        // 1. Validasi diubah untuk file .docx
         $validated = $request->validate([
             'nama_template' => 'required|string|max:255',
-            'konten_template' => 'required|string',
-            'aktif' => 'boolean',
-            'kategori_surat' => 'required|in:default,form,non_form'
+            'file_template' => 'required|file|mimes:docx|max:2048', // Memastikan file adalah .docx
         ]);
         
-        // Set kategori default sebagai 'default'
-        $validated['kategori_surat'] = 'default';
+        // 2. Simpan file yang di-upload ke storage
+        // Folder 'templates' akan dibuat di dalam 'storage/app/public/'
+        $path = $request->file('file_template')->store('templates', 'public');
         
-        TemplateSurat::create($validated);
+        // 3. Simpan path file ke database
+        TemplateSurat::create([
+            'nama_template' => $validated['nama_template'],
+            'template_path' => $path,
+            'aktif'         => $request->boolean('aktif'), // Cara aman mengambil nilai boolean
+        ]);
         
+        // 4. Redirect ke halaman index dengan pesan sukses
         return redirect()->route('admin.templates.index')
-            ->with('success', 'Template surat berhasil dibuat.');
+            ->with('success', 'Template surat berhasil di-upload.');
     }
     
-    // Menampilkan detail template surat
+    /**
+     * Menampilkan detail template surat.
+     * Tidak ada perubahan, tetapi view 'show' bisa menampilkan link download ke template asli
+     * menggunakan accessor '$template->public_url' dari model.
+     */
     public function show($id)
     {
         $template = TemplateSurat::findOrFail($id);
         return view('admin.templates.show', compact('template'));
     }
     
-    // Menampilkan form untuk mengedit template surat
+    /**
+     * Menampilkan form untuk mengedit template surat.
+     * Tidak ada perubahan, tetapi view 'edit' harus memungkinkan upload file baru (opsional).
+     */
     public function edit($id)
     {
         $template = TemplateSurat::findOrFail($id);
         return view('admin.templates.edit', compact('template'));
     }
     
-    // Menyimpan perubahan template surat
+    /**
+     * Menyimpan perubahan pada template surat.
+     * Logika dirombak total: lebih sederhana dan mengelola file lama.
+     */
     public function update(Request $request, $id)
     {
         $template = TemplateSurat::findOrFail($id);
         
+        // Validasi, file template sekarang bersifat 'nullable' (tidak wajib diisi saat update)
         $validated = $request->validate([
             'nama_template' => 'required|string|max:255',
-            'konten_template' => 'required|string',
-            'aktif' => 'boolean',
-            'kategori_surat' => 'required|in:default,form,non_form',
-            'action_type' => 'required|in:update_original,save_as_new'
+            'file_template' => 'nullable|file|mimes:docx|max:2048',
         ]);
         
-        if ($request->action_type === 'save_as_new') {
-            // Buat template baru dengan kategori yang dipilih
-            $newTemplate = $template->replicate();
-            $newTemplate->kategori_surat = $validated['kategori_surat'];
-            $newTemplate->nama_template = $validated['nama_template'];
-            $newTemplate->konten_template = $validated['konten_template'];
-            $newTemplate->save();
+        // Update nama template
+        $template->nama_template = $validated['nama_template'];
+        $template->aktif = $request->boolean('aktif');
+
+        // Cek jika ada file baru yang di-upload
+        if ($request->hasFile('file_template')) {
+            // 1. Hapus file lama dari storage untuk menghemat ruang
+            Storage::disk('public')->delete($template->template_path);
             
-            $kategoriText = $validated['kategori_surat'] === 'form' ? 'Form' : ($validated['kategori_surat'] === 'non_form' ? 'Non-Form' : 'Default');
-            $message = 'Template surat baru berhasil disimpan dengan kategori ' . $kategoriText . '.';
-            $kategori = $validated['kategori_surat'];
-        } else {
-            // Update template asli
-            $template->update($validated);
-            $message = 'Template surat berhasil diperbarui.';
-            $kategori = $template->kategori_surat;
+            // 2. Simpan file baru
+            $newPath = $request->file('file_template')->store('templates', 'public');
+            
+            // 3. Update path di database
+            $template->template_path = $newPath;
         }
         
-        // Redirect berdasarkan kategori
-        if ($kategori === 'form') {
-            $route = 'admin.surat-form.index';
-        } elseif ($kategori === 'non_form') {
-            $route = 'admin.surat-non-form.index';
-        } else {
-            $route = 'admin.templates.index';
-        }
+        $template->save();
         
-        return redirect()->route($route)
-            ->with('success', $message);
+        return redirect()->route('admin.templates.index')
+            ->with('success', 'Template surat berhasil diperbarui.');
     }
     
-    // Menghapus template surat
+    /**
+     * Menghapus template surat beserta file fisiknya.
+     */
     public function destroy($id)
     {
         $template = TemplateSurat::findOrFail($id);
-        $kategori = $template->kategori_surat;
+        
+        // PENTING: Hapus file fisik dari storage sebelum menghapus record DB
+        Storage::disk('public')->delete($template->template_path);
+        
+        // Hapus record dari database
         $template->delete();
         
-        // Redirect berdasarkan kategori
-        if ($kategori === 'form') {
-            $route = 'admin.surat-form.index';
-        } elseif ($kategori === 'non_form') {
-            $route = 'admin.surat-non-form.index';
-        } else {
-            $route = 'admin.templates.index';
-        }
-        
-        return redirect()->route($route)
+        return redirect()->route('admin.templates.index')
             ->with('success', 'Template surat berhasil dihapus.');
     }
 
-    // Menghasilkan file PDF dari template surat
-    public function generatePdf($id)
-    {
-        $template = TemplateSurat::findOrFail($id);
-        
-        // Pastikan hanya template non-form yang bisa di-generate PDF
-        if ($template->kategori_surat !== 'non_form') {
-            return redirect()->back()->with('error', 'Hanya template surat non-form yang dapat di-generate PDF.');
-        }
-        
-        // Konten template untuk PDF
-        $content = $template->konten_template;
-        
-        // Proses placeholder bulan dan tahun
-        $currentMonth = date('m');
-        $currentYear = date('Y');
-        
-        // Ganti placeholder bulan
-        $content = str_replace("{{ \$data->bulan }}", $currentMonth, $content);
-        $content = str_replace("{{{ \$data->bulan }}}", $currentMonth, $content);
-        $content = str_replace("{{\$data->bulan}}", $currentMonth, $content);
-        $content = str_replace("{{ \$bulan }}", $currentMonth, $content);
-        $content = str_replace("{{{ \$bulan }}}", $currentMonth, $content);
-        $content = str_replace("{{\$bulan}}", $currentMonth, $content);
-        
-        // Ganti placeholder tahun
-        $content = str_replace("{{ \$data->tahun }}", $currentYear, $content);
-        $content = str_replace("{{{ \$data->tahun }}}", $currentYear, $content);
-        $content = str_replace("{{\$data->tahun}}", $currentYear, $content);
-        $content = str_replace("{{ \$tahun }}", $currentYear, $content);
-        $content = str_replace("{{{ \$tahun }}}", $currentYear, $content);
-        $content = str_replace("{{\$tahun}}", $currentYear, $content);
-        
-        // Ganti format gabungan /bulan/tahun
-        $content = str_replace("/{{ \$data->bulan }}/{{ \$data->tahun }}", "/$currentMonth/$currentYear", $content);
-        $content = str_replace("/{{{ \$data->bulan }}}/{{{ \$data->tahun }}}", "/$currentMonth/$currentYear", $content);
-        $content = str_replace("/{{\$data->bulan}}/{{\$data->tahun}}", "/$currentMonth/$currentYear", $content);
-        $content = str_replace("/{{ \$bulan }}/{{ \$tahun }}", "/$currentMonth/$currentYear", $content);
-        $content = str_replace("/{{{ \$bulan }}}/{{{ \$tahun }}}", "/$currentMonth/$currentYear", $content);
-        $content = str_replace("/{{\$bulan}}/{{\$tahun}}", "/$currentMonth/$currentYear", $content);
-        
-        // Generate PDF
-        $pdf = Pdf::loadView('print.template_pdf', [
-            'template' => $template,
-            'content' => $content
-        ]);
-        
-        return $pdf->stream('template_' . $template->nama_template . '.pdf');
-    }
+    /*
+    |--------------------------------------------------------------------------
+    | Metode generatePdf() Dihapus
+    |--------------------------------------------------------------------------
+    |
+    | Metode ini tidak lagi relevan karena:
+    | 1. Sistem sekarang menggunakan template .docx, bukan HTML untuk PDF.
+    | 2. Tugas controller ini adalah MENGELOLA template (CRUD), bukan MENGGUNAKANNYA
+    |    untuk membuat dokumen. Proses pembuatan dokumen ada di controller lain.
+    |
+    */
 }

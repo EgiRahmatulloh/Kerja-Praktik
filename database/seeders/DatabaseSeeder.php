@@ -42,13 +42,7 @@ class DatabaseSeeder extends Seeder
         
         // Menjalankan seeder lainnya
         $this->call([
-            TemplateSuratSeeder::class,
             DataItemSeeder::class,
-            SuratPemberitahuanSeeder::class,
-            SuratBalasanSeeder::class,
-            SuratKuasaSeeder::class,
-            BeritaAcaraSeeder::class,
-            // FilledLetterSeeder::class,
         ]);
     }
 }
