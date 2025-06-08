@@ -138,6 +138,10 @@
                         <button type="button" id="submitBtn" class="btn btn-primary">
                             <i class="bi bi-save"></i> Simpan Perubahan
                         </button>
+
+                        <button type="submit" id="directSubmitBtn" class="btn btn-secondary">
+                            Submit Langsung
+                        </button>
                     </form>
                 </div>
             </div>
@@ -263,7 +267,16 @@
 
         // Ketika tombol konfirmasi di modal ditekan
         $('#confirmSubmit').click(function() {
-            // Submit form
+            // Debug form sebelum submit
+            console.log('Form action:', $('#statusForm').attr('action'));
+            console.log('Form method:', $('#statusForm').attr('method'));
+            console.log('Status value:', $('#status').val());
+            console.log('Catatan admin value:', $('#catatan_admin').val());
+            console.log('Form elements:', $('#statusForm').serialize());
+            console.log('CSRF token:', $('input[name="_token"]').val());
+            console.log('Method field:', $('input[name="_method"]').val());
+
+            // Submit form langsung tanpa jQuery
             document.getElementById('statusForm').submit();
         });
 

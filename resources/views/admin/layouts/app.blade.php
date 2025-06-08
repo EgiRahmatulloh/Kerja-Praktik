@@ -350,20 +350,24 @@
             // Kode polling yang sudah ada
 
             // Dengarkan event real-time dari Pusher
-            window.Echo.channel('admin-notifications')
-                .listen('.letter.submitted', (data) => {
-                    showNotification(data.title, data.message, data.url);
+            if (window.Echo && typeof window.Echo.channel === 'function') {
+                window.Echo.channel('admin-notifications')
+                    .listen('.letter.submitted', (data) => {
+                        showNotification(data.title, data.message, data.url);
 
-                    // Update last_seen_letter_id di session
-                    $.ajax({
-                        url: '{{ route("admin.notifications.mark-all-read") }}',
-                        type: 'POST',
-                        headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        },
-                        dataType: 'json'
+                        // Update last_seen_letter_id di session
+                        $.ajax({
+                            url: '{{ route("admin.notifications.mark-all-read") }}',
+                            type: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            dataType: 'json'
+                        });
                     });
-                });
+            } else {
+                console.warn('Laravel Echo is not loaded. Real-time notifications will not work.');
+            }
         });
     </script>
 </body>

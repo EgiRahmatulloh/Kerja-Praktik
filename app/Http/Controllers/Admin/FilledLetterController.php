@@ -193,28 +193,44 @@ class FilledLetterController extends Controller
             'catatan_admin.required' => 'Catatan admin wajib diisi jika status ditolak'
         ]);
 
-        $updateData = [
-            'status' => $validated['status'],
+        // Log untuk debugging
+        \Illuminate\Support\Facades\Log::info('Update Status Request:', [
+            'letter_id' => $id,
+            'current_status' => $letter->status,
+            'new_status' => $validated['status'],
             'catatan_admin' => $validated['catatan_admin'] ?? null,
-            'no_surat' => $validated['no_surat'] ?? $letter->no_surat,
-        ];
+        ]);
+
+        // Set properti model secara langsung
+        $letter->status = $validated['status'];
+        $letter->catatan_admin = $validated['catatan_admin'] ?? null;
+
+        // Update nomor surat jika ada
+        if (!empty($validated['no_surat'])) {
+            $letter->no_surat = $validated['no_surat'];
+        }
 
         // Jika status diubah menjadi pending atau rejected, hapus dari antrian
         if (($validated['status'] == 'pending' || $validated['status'] == 'rejected')) {
             // Cari dan hapus antrian yang terkait dengan surat ini
-            // Pastikan mencari berdasarkan filled_letter_id untuk menghindari masalah dengan relasi
             $queue = LetterQueue::where('filled_letter_id', $letter->id)->first();
             if ($queue) {
                 $queue->delete();
                 // Log penghapusan antrian
-                Log::info("Menghapus antrian surat #{$letter->id} karena status diubah menjadi {$validated['status']}");
+                \Illuminate\Support\Facades\Log::info("Menghapus antrian #{$queue->id} karena status surat #{$letter->id} diubah menjadi {$validated['status']}");
             }
         }
 
+        // Update surat dan log hasilnya
+        $saved = $letter->save();
+        \Illuminate\Support\Facades\Log::info('Status surat berhasil diperbarui (force dirty):', [
+            'letter_id' => $letter->id,
+            'new_status' => $letter->status,
+            'catatan_admin' => $letter->catatan_admin,
+            'saved_result' => $saved
+        ]);
 
-        $letter->update($updateData);
-
-        return redirect()->route('admin.filled-letters.show', $letter->id)
+        return redirect()->route('admin.filled-letters.index')
             ->with('success', 'Status surat berhasil diperbarui.');
     }
 

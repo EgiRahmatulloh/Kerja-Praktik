@@ -31,7 +31,7 @@
                 </div>
             </div>
 
-            <form action="{{ route('admin.filled-letters.update', $letter->id) }}" method="POST">
+            <form action="{{ route('admin.filled-letters.update-status', $letter->id) }}" method="POST">
                 @csrf
                 @method('PUT')
 
