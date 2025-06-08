@@ -12,8 +12,8 @@
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Informasi Surat</h5>
-                        <span class="badge {{ $letter->status == 'pending' ? 'bg-warning' : ($letter->status == 'approved' || $letter->status == 'dicetak' ? 'bg-success' : 'bg-danger') }}">
-                            {{ $letter->status == 'pending' ? 'Menunggu' : ($letter->status == 'approved' ? 'Disetujui' : ($letter->status == 'dicetak' ? 'Dicetak' : 'Ditolak')) }}
+                        <span class="badge {{ $letter->status == 'pending' ? 'bg-warning' : ($letter->status == 'approved' || $letter->status == 'printed' ? 'bg-success' : 'bg-danger') }}">
+                            {{ $letter->status == 'pending' ? 'Menunggu' : ($letter->status == 'approved' ? 'Disetujui' : ($letter->status == 'printed' ? 'Dicetak' : 'Ditolak')) }}
                         </span>
                     </div>
                     <div class="card-body">

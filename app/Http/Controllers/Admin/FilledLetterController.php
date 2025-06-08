@@ -176,18 +176,22 @@ class FilledLetterController extends Controller
     {
         $letter = FilledLetter::findOrFail($id);
 
-        $validated = $request->validate([
+        // Validasi dasar
+        $rules = [
             'status' => 'required|in:pending,approved,rejected,printed',
             'no_surat' => 'nullable|string',
-            'catatan_admin' => 'nullable|string',
-        ]);
+        ];
 
-        // Jika status diubah menjadi rejected, pastikan catatan admin diisi
-        if ($validated['status'] == 'rejected' && empty($validated['catatan_admin'])) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['catatan_admin' => 'Catatan admin wajib diisi jika status ditolak']);
+        // Tambahkan validasi wajib untuk catatan_admin jika status rejected
+        if ($request->input('status') === 'rejected') {
+            $rules['catatan_admin'] = 'required|string';
+        } else {
+            $rules['catatan_admin'] = 'nullable|string';
         }
+
+        $validated = $request->validate($rules, [
+            'catatan_admin.required' => 'Catatan admin wajib diisi jika status ditolak'
+        ]);
 
         $updateData = [
             'status' => $validated['status'],
@@ -260,7 +264,7 @@ class FilledLetterController extends Controller
         // Ganti variabel bulan dan tahun
         $currentMonth = date('m');
         $currentYear = date('Y');
-        
+
         // Ganti placeholder bulan
         $renderedContent = str_replace("{{ \$data->bulan }}", $currentMonth, $renderedContent);
         $renderedContent = str_replace("{{{ \$data->bulan }}}", $currentMonth, $renderedContent);
@@ -268,7 +272,7 @@ class FilledLetterController extends Controller
         $renderedContent = str_replace("{{ \$bulan }}", $currentMonth, $renderedContent);
         $renderedContent = str_replace("{{{ \$bulan }}}", $currentMonth, $renderedContent);
         $renderedContent = str_replace("{{\$bulan}}", $currentMonth, $renderedContent);
-        
+
         // Ganti placeholder tahun
         $renderedContent = str_replace("{{ \$data->tahun }}", $currentYear, $renderedContent);
         $renderedContent = str_replace("{{{ \$data->tahun }}}", $currentYear, $renderedContent);
@@ -276,7 +280,7 @@ class FilledLetterController extends Controller
         $renderedContent = str_replace("{{ \$tahun }}", $currentYear, $renderedContent);
         $renderedContent = str_replace("{{{ \$tahun }}}", $currentYear, $renderedContent);
         $renderedContent = str_replace("{{\$tahun}}", $currentYear, $renderedContent);
-        
+
         // Ganti format gabungan /bulan/tahun
         $renderedContent = str_replace("/{{ \$data->bulan }}/{{ \$data->tahun }}", "/$currentMonth/$currentYear", $renderedContent);
         $renderedContent = str_replace("/{{\$data->bulan}}/{{\$data->tahun}}", "/$currentMonth/$currentYear", $renderedContent);
@@ -361,7 +365,7 @@ class FilledLetterController extends Controller
         // Ganti variabel bulan dan tahun
         $currentMonth = date('m');
         $currentYear = date('Y');
-        
+
         // Ganti placeholder bulan
         $renderedContent = str_replace("{{ \$data->bulan }}", $currentMonth, $renderedContent);
         $renderedContent = str_replace("{{{ \$data->bulan }}}", $currentMonth, $renderedContent);
@@ -369,7 +373,7 @@ class FilledLetterController extends Controller
         $renderedContent = str_replace("{{ \$bulan }}", $currentMonth, $renderedContent);
         $renderedContent = str_replace("{{{ \$bulan }}}", $currentMonth, $renderedContent);
         $renderedContent = str_replace("{{\$bulan}}", $currentMonth, $renderedContent);
-        
+
         // Ganti placeholder tahun
         $renderedContent = str_replace("{{ \$data->tahun }}", $currentYear, $renderedContent);
         $renderedContent = str_replace("{{{ \$data->tahun }}}", $currentYear, $renderedContent);
@@ -377,7 +381,7 @@ class FilledLetterController extends Controller
         $renderedContent = str_replace("{{ \$tahun }}", $currentYear, $renderedContent);
         $renderedContent = str_replace("{{{ \$tahun }}}", $currentYear, $renderedContent);
         $renderedContent = str_replace("{{\$tahun}}", $currentYear, $renderedContent);
-        
+
         // Ganti format gabungan /bulan/tahun
         $renderedContent = str_replace("/{{ \$data->bulan }}/{{ \$data->tahun }}", "/$currentMonth/$currentYear", $renderedContent);
         $renderedContent = str_replace("/{{\$data->bulan}}/{{\$data->tahun}}", "/$currentMonth/$currentYear", $renderedContent);
@@ -421,15 +425,15 @@ class FilledLetterController extends Controller
             ->findOrFail($id);
 
         $template = $letter->letterType->templateSurat;
-        
+
         // Ambil path file template DOCX
         $templatePath = $template->full_path;
-        
+
         // Pastikan file template ada
         if (!file_exists($templatePath)) {
             abort(404, 'Template file tidak ditemukan');
         }
-        
+
         // Baca template DOCX yang sudah ada
         $templateProcessor = new TemplateProcessor($templatePath);
 
@@ -452,7 +456,7 @@ class FilledLetterController extends Controller
         }
         $templateProcessor->setValue('tglSurat', $tglSurat);
         $templateProcessor->setValue('data.tglSurat', $tglSurat);
-        
+
         // Format tanggal yang lebih kompleks
         $formattedDate = date('d M Y', strtotime($tglSurat));
         $templateProcessor->setValue('formattedDate', $formattedDate);
@@ -461,25 +465,33 @@ class FilledLetterController extends Controller
         // Ganti variabel bulan dan tahun
         $currentMonth = date('m');
         $currentYear = date('Y');
-        
+
         // Array nama bulan dalam bahasa Indonesia
         $namaBulan = [
-            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret',
-            '04' => 'April', '05' => 'Mei', '06' => 'Juni',
-            '07' => 'Juli', '08' => 'Agustus', '09' => 'September',
-            '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+            '01' => 'Januari',
+            '02' => 'Februari',
+            '03' => 'Maret',
+            '04' => 'April',
+            '05' => 'Mei',
+            '06' => 'Juni',
+            '07' => 'Juli',
+            '08' => 'Agustus',
+            '09' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember'
         ];
-        
+
         $bulanHuruf = $namaBulan[$currentMonth];
-        
+
         // Bulan dalam format angka
         $templateProcessor->setValue('bulan', $currentMonth);
         $templateProcessor->setValue('data.bulan', $currentMonth);
-        
+
         // Bulan dalam format huruf
         $templateProcessor->setValue('bulanHuruf', $bulanHuruf);
         $templateProcessor->setValue('data.bulanHuruf', $bulanHuruf);
-        
+
         // Tahun
         $templateProcessor->setValue('tahun', $currentYear);
         $templateProcessor->setValue('data.tahun', $currentYear);
@@ -499,18 +511,18 @@ class FilledLetterController extends Controller
         if ($letter->status == 'approved') {
             $letter->update(['status' => 'printed']);
         }
-        
+
         // Simpan hasil template yang sudah diproses
         // Buat nama file yang unik dengan nama user dan tanggal
         $userName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $letter->user->name);
         $letterTypeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $letter->letterType->name);
         $currentDate = date('Y-m-d');
-        
+
         $fileName = $letterTypeName . '_' . $userName . '_' . $currentDate . '_' . $letter->id . '.docx';
         $tempFile = tempnam(sys_get_temp_dir(), 'phpword');
-        
+
         $templateProcessor->saveAs($tempFile);
-        
+
         return response()->download($tempFile, $fileName)->deleteFileAfterSend(true);
     }
 }

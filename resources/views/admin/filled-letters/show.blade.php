@@ -267,6 +267,30 @@
             document.getElementById('statusForm').submit();
         });
 
+        // Tambahkan event listener untuk perubahan status
+        $('#status').change(function() {
+            const status = $(this).val();
+            const catatanField = $('#catatan_admin');
+            const catatanLabel = $('label[for="catatan_admin"]');
+
+            if (status === 'rejected') {
+                // Tambahkan tanda bintang merah untuk menunjukkan field wajib diisi
+                if (!catatanLabel.find('.text-danger').length) {
+                    catatanLabel.append(' <span class="text-danger">*</span>');
+                }
+                // Tambahkan atribut required
+                catatanField.prop('required', true);
+            } else {
+                // Hapus tanda bintang merah
+                catatanLabel.find('.text-danger').remove();
+                // Hapus atribut required
+                catatanField.prop('required', false);
+            }
+        });
+
+        // Trigger change event pada load untuk mengatur status awal
+        $('#status').trigger('change');
+
         // Fungsi untuk edit template surat
         $('#toggleEditBtn').click(function() {
             $('#previewMode').hide();
@@ -293,27 +317,34 @@
         function processTemplate(template) {
             // Dapatkan data yang diisi dari halaman
             const filledData = {};
-            @foreach($letter->filled_data as $key => $value)
+            @foreach($letter - > filled_data as $key => $value)
             filledData['{{ $key }}'] = '{{ $value }}';
             @endforeach
 
-            // Ganti variabel dengan data yang diisi
-            let processedContent = template;
-            for (const [key, value] of Object.entries(filledData)) {
-                // Ganti semua format variabel yang mungkin
-                processedContent = processedContent.replace(new RegExp('\{\{ \$' + key + ' \}\}', 'g'), value);
-                processedContent = processedContent.replace(new RegExp('\{\{\$' + key + '\}\}', 'g'), value);
-                processedContent = processedContent.replace(new RegExp('\{\{ \$data->' + key + ' \}\}', 'g'), value);
-                processedContent = processedContent.replace(new RegExp('\{\{\$data->' + key + '\}\}', 'g'), value);
+            // Ganti placeholder dengan data yang diisi
+            let processedTemplate = template;
+
+            // Ganti semua format variabel yang mungkin
+            for (const key in filledData) {
+                // Format placeholder: {key}
+                processedTemplate = processedTemplate.replace(new RegExp(`\{${key}\}`, 'g'), filledData[key]);
+
+                // Format placeholder: {{ $key }}
+                processedTemplate = processedTemplate.replace(new RegExp(`\{\{ \$${key} \}\}`, 'g'), filledData[key]);
+                processedTemplate = processedTemplate.replace(new RegExp(`\{\{\$${key}\}\}`, 'g'), filledData[key]);
+
+                // Format placeholder: {{ $data->key }}
+                processedTemplate = processedTemplate.replace(new RegExp(`\{\{ \$data->${key} \}\}`, 'g'), filledData[key]);
+                processedTemplate = processedTemplate.replace(new RegExp(`\{\{\$data->${key}\}\}`, 'g'), filledData[key]);
             }
 
-            processedContent = processedContent.replace(/\{\{ \$noSurat \}\}/g, '{{ $letter->no_surat }}');
-            processedContent = processedContent.replace(/\{\{\$noSurat\}\}/g, '{{ $letter->no_surat }}');
-            processedContent = processedContent.replace(/\{\{ \$data->noSurat \}\}/g, '{{ $letter->no_surat }}');
-            processedContent = processedContent.replace(/\{\{\$data->noSurat\}\}/g, '{{ $letter->no_surat }}');
+            // Tambahkan penggantian untuk nomor surat
+            processedTemplate = processedTemplate.replace(/\{\{ \$noSurat \}\}/g, '{{ $letter->no_surat }}');
+            processedTemplate = processedTemplate.replace(/\{\{\$noSurat\}\}/g, '{{ $letter->no_surat }}');
+            processedTemplate = processedTemplate.replace(/\{\{ \$data->noSurat \}\}/g, '{{ $letter->no_surat }}');
+            processedTemplate = processedTemplate.replace(/\{\{\$data->noSurat\}\}/g, '{{ $letter->no_surat }}');
 
-
-            return processedContent;
+            return processedTemplate;
         }
     });
 </script>

@@ -38,7 +38,7 @@
                                     <span class="badge bg-warning">Menunggu</span>
                                     @elseif($letter->status == 'approved')
                                     <span class="badge bg-success">Disetujui</span>
-                                    @elseif($letter->status == 'dicetak')
+                                    @elseif($letter->status == 'printed')
                                     <span class="badge bg-primary">Dicetak</span>
                                     @elseif($letter->status == 'rejected')
                                     <span class="badge bg-danger">Ditolak</span>

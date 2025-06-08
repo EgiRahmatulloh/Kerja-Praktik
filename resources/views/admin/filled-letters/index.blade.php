@@ -70,8 +70,6 @@
                                 <span class="badge bg-danger">Ditolak</span>
                                 @elseif($letter->status == 'printed')
                                 <span class="badge bg-primary">Dicetak</span>
-                                @elseif($letter->status == 'dicetak') {{-- Fallback for old status --}}
-                                <span class="badge bg-info text-dark">Dicetak (Lama)</span>
                                 @endif
                             </td>
                             <td>{{ $letter->no_surat ?: '-' }}</td>
@@ -82,7 +80,7 @@
                                 <a href="{{ route('admin.filled-letters.edit', $letter->id) }}" class="btn btn-sm btn-warning" title="Edit">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                @if($letter->status == 'approved' || $letter->status == 'dicetak' || $letter->status == 'printed')
+                                @if($letter->status == 'approved' || $letter->status == 'printed')
                                 <a href="{{ route('admin.filled-letters.print', $letter->id) }}" class="btn btn-sm btn-success" target="_blank" title="Print">
                                     <i class="bi bi-printer"></i>
                                 </a>
