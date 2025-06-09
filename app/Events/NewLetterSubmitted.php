@@ -56,8 +56,8 @@ class NewLetterSubmitted implements ShouldBroadcast
     {
         return [
             'id' => $this->letter->id,
-            'title' => 'Surat Baru Masuk',
-            'message' => "Mahasiswa {$this->letter->user->name} mengajukan surat {$this->letter->letterType->nama_jenis}",
+            'title' => 'Pengajuan Surat Baru',
+            'message' => "Terdapat pengajuan surat baru dari {$this->letter->user->name} untuk jenis surat {$this->letter->letterType->nama_jenis}",
             'time' => $this->letter->created_at->diffForHumans(),
             'url' => route('admin.filled-letters.show', $this->letter->id)
         ];

@@ -14,6 +14,7 @@ use App\Http\Controllers\User\DashboardController as UserDashboardController;
 use App\Http\Controllers\User\LetterController;
 use App\Http\Controllers\User\LetterQueueController as UserLetterQueueController;
 use App\Http\Controllers\Admin\NotificationController;
+use App\Http\Controllers\Admin\LetterController as AdminLetterController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -71,6 +72,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('filled-letters/{id}/docx', [FilledLetterController::class, 'generateDocx'])->name('filled-letters.docx');
     Route::put('filled-letters/{id}/status', [FilledLetterController::class, 'updateStatus'])->name('filled-letters.update-status');
     Route::put('filled-letters/{id}/template', [FilledLetterController::class, 'updateTemplate'])->name('filled-letters.update-template');
+
+    // Surat (Admin)
+    Route::get('/letters', [AdminLetterController::class, 'index'])->name('letters.index');
+    Route::get('/letters/create/{letterType}', [AdminLetterController::class, 'create'])->name('letters.create');
+    Route::post('/letters/store/{letterType}', [AdminLetterController::class, 'store'])->name('letters.store');
+    Route::get('/letters/history', [AdminLetterController::class, 'history'])->name('letters.history');
+    Route::get('/letters/{letter}', [AdminLetterController::class, 'show'])->name('letters.show');
+    Route::get('/letters/{letter}/edit', [AdminLetterController::class, 'edit'])->name('letters.edit');
+    Route::put('/letters/{letter}', [AdminLetterController::class, 'update'])->name('letters.update');
 
     // Antrian Surat
     Route::resource('letter-queues', LetterQueueController::class)->except(['create', 'store', 'destroy']);

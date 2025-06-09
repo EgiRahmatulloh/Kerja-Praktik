@@ -21,7 +21,6 @@
                 <a href="{{ route('admin.filled-letters.docx', $letter->id) }}" class="btn btn-primary ms-2">
                     <i class="bi bi-download"></i> Download DOCX
                 </a>
-                @endif
             </div>
         </div>
         <div class="card-body">
@@ -143,42 +142,6 @@
             </div>
             @endif
 
-            <div class="card mt-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">Preview Surat</h6>
-                    <button type="button" class="btn btn-sm btn-primary" id="toggleEditBtn">
-                        <i class="bi bi-pencil"></i> Edit Template
-                    </button>
-                </div>
-                <div class="card-body">
-                    <!-- Mode Preview -->
-                    <div id="previewMode" class="border p-3">
-                        {!! $preview !!}
-                    </div>
-
-                    <!-- Mode Edit -->
-                    <div id="editMode" class="border p-3" style="display: none;">
-                        <form id="templateEditForm" action="{{ route('admin.filled-letters.update-template', $letter->id) }}" method="POST">
-                            @csrf
-                            @method('PUT')
-                            <div class="form-group mb-3">
-                                <textarea id="templateEditor" name="template_content" class="form-control" rows="15" style="font-family: monospace;">{{ $content }}</textarea>
-                            </div>
-                            <div class="d-flex justify-content-end">
-                                <button type="button" class="btn btn-secondary me-2" id="cancelEditBtn">Batal</button>
-                                <button type="button" class="btn btn-primary" id="previewEditBtn">Preview</button>
-                                <button type="submit" class="btn btn-success ms-2">Simpan Perubahan</button>
-                            </div>
-                        </form>
-                    </div>
-
-                    <!-- Mode Preview Hasil Edit -->
-                    <div id="previewEditMode" class="border p-3 mt-3" style="display: none;">
-                        <h6 class="mb-3">Preview Hasil Edit:</h6>
-                        <div id="previewEditContent"></div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </div>
@@ -300,61 +263,6 @@
         // Trigger change event pada load untuk mengatur status awal
         $('#status').trigger('change');
 
-        // Fungsi untuk edit template surat
-        $('#toggleEditBtn').click(function() {
-            $('#previewMode').hide();
-            $('#editMode').show();
-            $('#previewEditMode').hide();
-        });
-
-        $('#cancelEditBtn').click(function() {
-            $('#editMode').hide();
-            $('#previewEditMode').hide();
-            $('#previewMode').show();
-        });
-
-        $('#previewEditBtn').click(function() {
-            // Ambil konten template yang diedit
-            const editedTemplate = $('#templateEditor').val();
-
-            // Tampilkan preview hasil edit
-            $('#previewEditContent').html(processTemplate(editedTemplate));
-            $('#previewEditMode').show();
-        });
-
-        // Fungsi untuk memproses template dengan data yang diisi
-        function processTemplate(template) {
-            // Dapatkan data yang diisi dari halaman
-            const filledData = {};
-            @foreach($letter - > filled_data as $key => $value)
-            filledData['{{ $key }}'] = '{{ $value }}';
-            @endforeach
-
-            // Ganti placeholder dengan data yang diisi
-            let processedTemplate = template;
-
-            // Ganti semua format variabel yang mungkin
-            for (const key in filledData) {
-                // Format placeholder: {key}
-                processedTemplate = processedTemplate.replace(new RegExp(`\{${key}\}`, 'g'), filledData[key]);
-
-                // Format placeholder: {{ $key }}
-                processedTemplate = processedTemplate.replace(new RegExp(`\{\{ \$${key} \}\}`, 'g'), filledData[key]);
-                processedTemplate = processedTemplate.replace(new RegExp(`\{\{\$${key}\}\}`, 'g'), filledData[key]);
-
-                // Format placeholder: {{ $data->key }}
-                processedTemplate = processedTemplate.replace(new RegExp(`\{\{ \$data->${key} \}\}`, 'g'), filledData[key]);
-                processedTemplate = processedTemplate.replace(new RegExp(`\{\{\$data->${key}\}\}`, 'g'), filledData[key]);
-            }
-
-            // Tambahkan penggantian untuk nomor surat
-            processedTemplate = processedTemplate.replace(/\{\{ \$noSurat \}\}/g, '{{ $letter->no_surat }}');
-            processedTemplate = processedTemplate.replace(/\{\{\$noSurat\}\}/g, '{{ $letter->no_surat }}');
-            processedTemplate = processedTemplate.replace(/\{\{ \$data->noSurat \}\}/g, '{{ $letter->no_surat }}');
-            processedTemplate = processedTemplate.replace(/\{\{\$data->noSurat\}\}/g, '{{ $letter->no_surat }}');
-
-            return processedTemplate;
-        }
     });
 </script>
 @endpush
