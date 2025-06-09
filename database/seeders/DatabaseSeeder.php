@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
         // Menjalankan seeder lainnya
         $this->call([
             DataItemSeeder::class,
+            ServiceScheduleSeeder::class,
         ]);
     }
 }
