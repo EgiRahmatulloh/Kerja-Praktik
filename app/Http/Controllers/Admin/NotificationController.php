@@ -23,6 +23,16 @@ class NotificationController extends Controller
         // Ambil ID surat terakhir yang sudah dilihat dari session
         $lastSeenId = Session::get('last_seen_letter_id', 0);
         
+        // Cek apakah ada surat dengan ID yang lebih kecil atau sama dengan lastSeenId
+        // Jika tidak ada, reset lastSeenId ke 0 (kemungkinan database di-reset)
+        if ($lastSeenId > 0) {
+            $existingLetter = FilledLetter::where('id', '<=', $lastSeenId)->exists();
+            if (!$existingLetter) {
+                $lastSeenId = 0;
+                Session::put('last_seen_letter_id', 0);
+            }
+        }
+        
         // Ambil surat baru yang belum dilihat
         $newLetters = FilledLetter::with('user', 'letterType')
             ->where('id', '>', $lastSeenId)

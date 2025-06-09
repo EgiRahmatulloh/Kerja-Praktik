@@ -263,9 +263,25 @@ class FilledLetterController extends Controller
 
 
         // Ganti variabel tanggal surat
-        $tglSurat = date('Y-m-d');
+        $namaBulan = [
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+            '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+            '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+        ];
+
+        $day = date('d');
+        $monthNum = date('m');
+        $year = date('Y');
+        $bulanHuruf = $namaBulan[$monthNum];
+
+        $tglSurat = "$day $bulanHuruf $year";
         if (isset($letter->filled_data['tglSurat'])) {
-            $tglSurat = $letter->filled_data['tglSurat'];
+            $timestamp = strtotime($letter->filled_data['tglSurat']);
+            $day = date('d', $timestamp);
+            $monthNum = date('m', $timestamp);
+            $year = date('Y', $timestamp);
+            $bulanHuruf = $namaBulan[$monthNum];
+            $tglSurat = "$day $bulanHuruf $year";
         }
         $renderedContent = str_replace("{{ \$tglSurat }}", $tglSurat, $renderedContent);
         $renderedContent = str_replace("{{\$tglSurat}}", $tglSurat, $renderedContent);
@@ -273,7 +289,17 @@ class FilledLetterController extends Controller
         $renderedContent = str_replace("{{\$data->tglSurat}}", $tglSurat, $renderedContent);
 
         // Tambahan untuk format tanggal yang lebih kompleks
-        $formattedDate = date('d M Y', strtotime($tglSurat));
+        $namaBulanSingkat = [
+            '01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr',
+            '05' => 'Mei', '06' => 'Jun', '07' => 'Jul', '08' => 'Agu',
+            '09' => 'Sep', '10' => 'Okt', '11' => 'Nov', '12' => 'Des'
+        ];
+        $timestampFormatted = strtotime($tglSurat);
+        $dayFormatted = date('d', $timestampFormatted);
+        $monthNumFormatted = date('m', $timestampFormatted);
+        $yearFormatted = date('Y', $timestampFormatted);
+        $bulanSingkat = $namaBulanSingkat[$monthNumFormatted];
+        $formattedDate = "$dayFormatted $bulanSingkat $yearFormatted";
         $renderedContent = str_replace("{{ date('d M Y', strtotime(\$data->tglSurat)); }}", $formattedDate, $renderedContent);
         $renderedContent = str_replace("{{ date('d M\nY', strtotime(\$data-\n>tglSurat)); }}", $formattedDate, $renderedContent);
 
@@ -332,108 +358,6 @@ class FilledLetterController extends Controller
         return $this->generateDocx($id);
     }
 
-    // Menghasilkan file PDF dari surat
-    public function generatePdf($id)
-    {
-        $letter = FilledLetter::with(['user', 'letterType', 'letterType.templateSurat'])
-            ->findOrFail($id);
-
-        $template = $letter->letterType->templateSurat;
-
-        // Cek apakah ada template yang diedit di session
-        $content = session('edited_template_' . $id) ?? $template->konten_template;
-
-        // Proses template secara manual
-        $renderedContent = $content;
-
-        // Ganti semua variabel dengan nilai sebenarnya
-        foreach ($letter->filled_data as $key => $value) {
-            $renderedContent = str_replace("{{ \$" . $key . " }}", $value, $renderedContent);
-            $renderedContent = str_replace("{{\$" . $key . "}}", $value, $renderedContent);
-            $renderedContent = str_replace("{{ \$data->" . $key . " }}", $value, $renderedContent);
-            $renderedContent = str_replace("{{\$data->" . $key . "}}", $value, $renderedContent);
-        }
-
-        // Format nomor surat: NoUrut saja
-        $formattedNoSurat = $letter->no_surat;
-
-        $renderedContent = str_replace("{{ \$noSurat }}", $formattedNoSurat, $renderedContent);
-        $renderedContent = str_replace("{{\$noSurat}}", $formattedNoSurat, $renderedContent);
-        $renderedContent = str_replace("{{ \$data->noSurat }}", $formattedNoSurat, $renderedContent);
-        $renderedContent = str_replace("{{\$data->noSurat}}", $formattedNoSurat, $renderedContent);
-
-
-        // Ganti variabel tanggal surat
-        $tglSurat = date('Y-m-d');
-        if (isset($letter->filled_data['tglSurat'])) {
-            $tglSurat = $letter->filled_data['tglSurat'];
-        }
-        $renderedContent = str_replace("{{ \$tglSurat }}", $tglSurat, $renderedContent);
-        $renderedContent = str_replace("{{\$tglSurat}}", $tglSurat, $renderedContent);
-        $renderedContent = str_replace("{{ \$data->tglSurat }}", $tglSurat, $renderedContent);
-        $renderedContent = str_replace("{{\$data->tglSurat}}", $tglSurat, $renderedContent);
-
-        // Tambahan untuk format tanggal yang lebih kompleks
-        $formattedDate = date('d M Y', strtotime($tglSurat));
-        $renderedContent = str_replace("{{ date('d M Y', strtotime(\$data->tglSurat)); }}", $formattedDate, $renderedContent);
-        $renderedContent = str_replace("{{ date('d M\nY', strtotime(\$data-\n>tglSurat)); }}", $formattedDate, $renderedContent);
-
-        // Ganti variabel bulan dan tahun
-        $currentMonth = date('m');
-        $currentYear = date('Y');
-
-        // Ganti placeholder bulan
-        $renderedContent = str_replace("{{ \$data->bulan }}", $currentMonth, $renderedContent);
-        $renderedContent = str_replace("{{{ \$data->bulan }}}", $currentMonth, $renderedContent);
-        $renderedContent = str_replace("{{\$data->bulan}}", $currentMonth, $renderedContent);
-        $renderedContent = str_replace("{{ \$bulan }}", $currentMonth, $renderedContent);
-        $renderedContent = str_replace("{{{ \$bulan }}}", $currentMonth, $renderedContent);
-        $renderedContent = str_replace("{{\$bulan}}", $currentMonth, $renderedContent);
-
-        // Ganti placeholder tahun
-        $renderedContent = str_replace("{{ \$data->tahun }}", $currentYear, $renderedContent);
-        $renderedContent = str_replace("{{{ \$data->tahun }}}", $currentYear, $renderedContent);
-        $renderedContent = str_replace("{{\$data->tahun}}", $currentYear, $renderedContent);
-        $renderedContent = str_replace("{{ \$tahun }}", $currentYear, $renderedContent);
-        $renderedContent = str_replace("{{{ \$tahun }}}", $currentYear, $renderedContent);
-        $renderedContent = str_replace("{{\$tahun}}", $currentYear, $renderedContent);
-
-        // Ganti format gabungan /bulan/tahun
-        $renderedContent = str_replace("/{{ \$data->bulan }}/{{ \$data->tahun }}", "/$currentMonth/$currentYear", $renderedContent);
-        $renderedContent = str_replace("/{{\$data->bulan}}/{{\$data->tahun}}", "/$currentMonth/$currentYear", $renderedContent);
-        $renderedContent = str_replace("/{{ \$bulan }}/{{ \$tahun }}", "/$currentMonth/$currentYear", $renderedContent);
-        $renderedContent = str_replace("/{{\$bulan}}/{{\$tahun}}", "/$currentMonth/$currentYear", $renderedContent);
-
-        // Ganti variabel ttd dan namaTtd
-        if (isset($letter->filled_data['ttd'])) {
-            $renderedContent = str_replace("{{ \$ttd }}", $letter->filled_data['ttd'], $renderedContent);
-            $renderedContent = str_replace("{{\$ttd}}", $letter->filled_data['ttd'], $renderedContent);
-            $renderedContent = str_replace("{{ \$data->ttd }}", $letter->filled_data['ttd'], $renderedContent);
-            $renderedContent = str_replace("{{\$data->ttd}}", $letter->filled_data['ttd'], $renderedContent);
-        }
-
-        if (isset($letter->filled_data['namaTtd'])) {
-            $renderedContent = str_replace("{{ \$namaTtd }}", $letter->filled_data['namaTtd'], $renderedContent);
-            $renderedContent = str_replace("{{\$namaTtd}}", $letter->filled_data['namaTtd'], $renderedContent);
-            $renderedContent = str_replace("{{ \$data->namaTtd }}", $letter->filled_data['namaTtd'], $renderedContent);
-            $renderedContent = str_replace("{{\$data->namaTtd}}", $letter->filled_data['namaTtd'], $renderedContent);
-        }
-
-        // Ganti tag Blade untuk konten HTML
-        foreach ($letter->filled_data as $key => $value) {
-            $renderedContent = str_replace("{!! \$data->" . $key . " !!}", $value, $renderedContent);
-            $renderedContent = str_replace("{!!\$data->" . $key . "!!}", $value, $renderedContent);
-        }
-
-        // Update status surat menjadi printed jika belum
-        if ($letter->status == 'approved') {
-            $letter->update(['status' => 'printed']);
-        }
-
-        $pdf = Pdf::loadView('print.letter_pdf', ['letter' => $letter, 'renderedContent' => $renderedContent]);
-        return $pdf->stream('surat_' . $letter->letterType->name . '_' . $letter->id . '.pdf');
-    }
-
     // Menghasilkan file DOCX dari surat
     public function generateDocx($id)
     {
@@ -466,51 +390,56 @@ class FilledLetterController extends Controller
         $templateProcessor->setValue('data.noSurat', $formattedNoSurat);
 
         // Ganti variabel tanggal surat
-        $tglSurat = date('Y-m-d');
+        $namaBulan = [
+            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
+            '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
+            '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+        ];
+
+        $day = date('d');
+        $monthNum = date('m');
+        $year = date('Y');
+        $bulanHuruf = $namaBulan[$monthNum];
+
+        $tglSurat = "$day $bulanHuruf $year";
         if (isset($letter->filled_data['tglSurat'])) {
-            $tglSurat = $letter->filled_data['tglSurat'];
+            $timestamp = strtotime($letter->filled_data['tglSurat']);
+            $day = date('d', $timestamp);
+            $monthNum = date('m', $timestamp);
+            $year = date('Y', $timestamp);
+            $bulanHuruf = $namaBulan[$monthNum];
+            $tglSurat = "$day $bulanHuruf $year";
         }
         $templateProcessor->setValue('tglSurat', $tglSurat);
         $templateProcessor->setValue('data.tglSurat', $tglSurat);
 
         // Format tanggal yang lebih kompleks
-        $formattedDate = date('d M Y', strtotime($tglSurat));
+        $namaBulanSingkat = [
+            '01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr',
+            '05' => 'Mei', '06' => 'Jun', '07' => 'Jul', '08' => 'Agu',
+            '09' => 'Sep', '10' => 'Okt', '11' => 'Nov', '12' => 'Des'
+        ];
+        $timestampFormatted = strtotime($tglSurat);
+        $dayFormatted = date('d', $timestampFormatted);
+        $monthNumFormatted = date('m', $timestampFormatted);
+        $yearFormatted = date('Y', $timestampFormatted);
+        $bulanSingkat = $namaBulanSingkat[$monthNumFormatted];
+        $formattedDate = "$dayFormatted $bulanSingkat $yearFormatted";
         $templateProcessor->setValue('formattedDate', $formattedDate);
         $templateProcessor->setValue('data.formattedDate', $formattedDate);
 
         // Ganti variabel bulan dan tahun
-        $currentMonth = date('m');
-        $currentYear = date('Y');
-
-        // Array nama bulan dalam bahasa Indonesia
-        $namaBulan = [
-            '01' => 'Januari',
-            '02' => 'Februari',
-            '03' => 'Maret',
-            '04' => 'April',
-            '05' => 'Mei',
-            '06' => 'Juni',
-            '07' => 'Juli',
-            '08' => 'Agustus',
-            '09' => 'September',
-            '10' => 'Oktober',
-            '11' => 'November',
-            '12' => 'Desember'
-        ];
-
-        $bulanHuruf = $namaBulan[$currentMonth];
-
         // Bulan dalam format angka
-        $templateProcessor->setValue('bulan', $currentMonth);
-        $templateProcessor->setValue('data.bulan', $currentMonth);
+        $templateProcessor->setValue('bulan', $monthNum);
+        $templateProcessor->setValue('data.bulan', $monthNum);
 
         // Bulan dalam format huruf
         $templateProcessor->setValue('bulanHuruf', $bulanHuruf);
         $templateProcessor->setValue('data.bulanHuruf', $bulanHuruf);
 
         // Tahun
-        $templateProcessor->setValue('tahun', $currentYear);
-        $templateProcessor->setValue('data.tahun', $currentYear);
+        $templateProcessor->setValue('tahun', $year);
+        $templateProcessor->setValue('data.tahun', $year);
 
         // Ganti variabel ttd dan namaTtd
         if (isset($letter->filled_data['ttd'])) {
