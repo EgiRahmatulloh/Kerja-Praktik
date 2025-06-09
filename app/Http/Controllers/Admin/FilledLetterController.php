@@ -50,14 +50,24 @@ class FilledLetterController extends Controller
     {
         $query = FilledLetter::with(['user', 'letterType']);
 
+        // Ambil ID pengguna yang memiliki peran 'admin'
+        $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
+
+        // Kecualikan surat yang dibuat oleh admin
+        $query->whereNotIn('user_id', $adminUserIds);
+
+        // Filter berdasarkan status jika ada di request
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        // Jika tidak ada status yang diminta, tampilkan semua status kecuali 'rejected'
+        else {
+            $query->whereIn('status', ['pending', 'approved', 'printed', 'completed']);
+        }
+
         // Filter berdasarkan jenis surat
         if ($request->filled('letter_type_id')) {
             $query->where('letter_type_id', $request->letter_type_id);
-        }
-
-        // Filter berdasarkan status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
         }
 
         $letters = $query->latest()->paginate(10);
@@ -355,6 +365,9 @@ class FilledLetterController extends Controller
             $letter->update(['status' => 'printed']);
         }
 
+        // Hapus template yang diedit dari session setelah dicetak
+        session()->forget('edited_template_' . $id);
+
         return $this->generateDocx($id);
     }
 
@@ -452,15 +465,20 @@ class FilledLetterController extends Controller
             $templateProcessor->setValue('data.namaTtd', $letter->filled_data['namaTtd']);
         }
 
+        Log::info('Before status update in generateDocx:', ['letter_id' => $letter->id, 'current_status' => $letter->status]);
+
         // Update status surat menjadi printed jika belum
-        if ($letter->status == 'approved') {
+        if ($letter->status == 'approved' || $letter->status == 'completed') {
             $letter->update(['status' => 'printed']);
+            Log::info('Status updated to printed in generateDocx:', ['letter_id' => $letter->id, 'new_status' => $letter->status]);
+        } else {
+            Log::info('Status not updated in generateDocx (not approved or completed):', ['letter_id' => $letter->id, 'current_status' => $letter->status]);
         }
 
         // Simpan hasil template yang sudah diproses
         // Buat nama file yang unik dengan nama user dan tanggal
         $userName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $letter->user->name);
-        $letterTypeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $letter->letterType->name);
+        $letterTypeName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $letter->letterType->nama_jenis);
         $currentDate = date('Y-m-d');
 
         $fileName = $letterTypeName . '_' . $userName . '_' . $currentDate . '_' . $letter->id . '.docx';

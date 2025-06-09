@@ -72,7 +72,7 @@ class LetterController extends Controller
             'user_id' => Auth::id(),
             'letter_type_id' => $letterType->id,
             'filled_data' => $filledData,
-            'status' => 'pending',
+            'status' => 'completed', // Langsung selesai jika dibuat oleh admin
             'no_surat' => $noSurat,
         ]);
 
@@ -81,7 +81,14 @@ class LetterController extends Controller
 
     public function history()
     {
-        $letters = FilledLetter::with('letterType')->orderBy('created_at', 'desc')->get();
+        // Ambil ID pengguna yang memiliki peran 'admin'
+        $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
+
+        $letters = FilledLetter::with('letterType')
+            ->whereIn('user_id', $adminUserIds) // Filter hanya surat yang dibuat oleh admin
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
         return View::make('admin.letters.history', compact('letters'));
     }
 
@@ -130,7 +137,7 @@ class LetterController extends Controller
 
         $letter->update([
             'filled_data' => $filledData,
-            'status' => 'pending',
+            'status' => 'completed', // Langsung selesai jika diperbarui oleh admin
             'catatan_admin' => null,
         ]);
 

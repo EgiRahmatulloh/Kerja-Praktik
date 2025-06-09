@@ -30,7 +30,7 @@
                         <tbody>
                             @forelse($letters as $index => $letter)
                             <tr>
-                                <td>{{ $index + 1 }}</td>
+                                <td>{{ $loop->iteration }}</td>
                                 <td>{{ $letter->letterType->nama_jenis }}</td>
                                 <td>{{ $letter->created_at->format('d-m-Y H:i') }}</td>
                                 <td>
@@ -48,8 +48,14 @@
                                 <td>
                                     <a href="{{ route('admin.letters.show', $letter->id) }}" class="btn btn-sm btn-info">Detail</a>
 
-                                    @if($letter->status == 'rejected')
+                                    @if($letter->status == 'rejected' || $letter->status == 'completed')
                                     <a href="{{ route('admin.letters.edit', $letter->id) }}" class="btn btn-sm btn-warning">Edit</a>
+                                    @endif
+
+                                    @if($letter->status == 'completed' || $letter->status == 'printed')
+                                    <a href="{{ route('admin.filled-letters.print', $letter->id) }}" class="btn btn-sm btn-success" title="Generate DOCX">
+                                        <i class="fa fa-file-word"></i>
+                                    </a>
                                     @endif
                                 </td>
                             </tr>
@@ -60,6 +66,10 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+
+                <div class="d-flex justify-content-center">
+                    {{ $letters->links() }}
                 </div>
 
                 <div class="mt-3">
