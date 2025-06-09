@@ -43,8 +43,15 @@ class FilledLetterObserver
             $existingQueue = LetterQueue::where('filled_letter_id', $filledLetter->id)->first();
 
             if (!$existingQueue) {
-                // Cari jadwal pelayanan yang aktif
-                $serviceSchedule = ServiceSchedule::where('is_active', true)->first();
+                // Cari jadwal pelayanan yang aktif dan tidak dijeda
+                $serviceSchedule = ServiceSchedule::where('is_active', true)
+                    ->where('is_paused', false)
+                    ->first();
+                
+                // Jika tidak ada jadwal aktif yang tidak dijeda, cari jadwal aktif lainnya
+                if (!$serviceSchedule) {
+                    $serviceSchedule = ServiceSchedule::where('is_active', true)->first();
+                }
 
                 if (!$serviceSchedule) {
                     // Jika tidak ada jadwal pelayanan, gunakan default (1 hari dari sekarang)

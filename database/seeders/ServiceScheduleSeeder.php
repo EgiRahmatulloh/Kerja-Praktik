@@ -32,7 +32,7 @@ class ServiceScheduleSeeder extends Seeder
         ServiceSchedule::create([
             'start_time' => '13:00:00',
             'end_time' => '16:00:00',
-            'is_active' => true, // Tidak aktif secara default, hanya satu yang aktif
+            'is_active' => true, // Aktif sebagai jadwal alternatif
             'processing_time' => 10, // 10 menit per antrian
             'is_paused' => false,
             'pause_message' => null,

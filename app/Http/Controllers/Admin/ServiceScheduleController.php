@@ -119,6 +119,15 @@ class ServiceScheduleController extends Controller
             'pause_end_time' => $request->pause_end_time
         ]);
 
+        // Aktifkan jadwal alternatif jika ada
+        $alternativeSchedule = ServiceSchedule::where('is_active', false)
+            ->where('id', '!=', $schedule->id)
+            ->first();
+            
+        if ($alternativeSchedule) {
+            $alternativeSchedule->update(['is_active' => true]);
+        }
+
         // Sesuaikan antrian yang terjeda ke jam yang tidak dijeda
         $this->adjustPausedQueues($schedule);
 
@@ -157,7 +166,13 @@ class ServiceScheduleController extends Controller
             return; // Tidak ada antrian yang perlu disesuaikan
         }
 
-        // Dapatkan waktu mulai dan selesai jadwal
+        // Cari jadwal alternatif yang aktif dan tidak dijeda
+        $alternativeSchedule = ServiceSchedule::where('is_active', true)
+            ->where('is_paused', false)
+            ->where('id', '!=', $schedule->id)
+            ->first();
+
+        // Dapatkan waktu mulai dan selesai jadwal yang dijeda
         $startTime = Carbon::parse($schedule->start_time);
         $endTime = Carbon::parse($schedule->end_time);
         $pauseEndTime = Carbon::parse($schedule->pause_end_time);
@@ -184,10 +199,32 @@ class ServiceScheduleController extends Controller
             return;
         }
 
-        // Mulai jadwal dari waktu akhir jeda
-        $queueDate = Carbon::parse($waitingQueues[$firstPausedQueueIndex]->scheduled_date->format('Y-m-d'));
-        $nextScheduledDate = Carbon::parse($pauseEndTime->format('H:i:s'))->setDateFrom($queueDate);
-        $endDateTime = Carbon::parse($endTime->format('H:i:s'))->setDateFrom($queueDate);
+        // Tentukan jadwal pengganti
+        if ($alternativeSchedule) {
+            // Gunakan jadwal alternatif yang aktif
+            $queueDate = Carbon::parse($waitingQueues[$firstPausedQueueIndex]->scheduled_date->format('Y-m-d'));
+            $nextScheduledDate = Carbon::parse($alternativeSchedule->start_time)->setDateFrom($queueDate);
+            $endDateTime = Carbon::parse($alternativeSchedule->end_time)->setDateFrom($queueDate);
+            $processingTime = $alternativeSchedule->processing_time;
+            
+            // Cari antrian terakhir di jadwal alternatif untuk hari yang sama
+            $lastQueueInAlternative = LetterQueue::where('status', 'waiting')
+                ->whereDate('scheduled_date', $queueDate)
+                ->where('scheduled_date', '>=', $nextScheduledDate)
+                ->where('scheduled_date', '<=', $endDateTime)
+                ->orderBy('scheduled_date', 'desc')
+                ->first();
+                
+            if ($lastQueueInAlternative) {
+                $nextScheduledDate = Carbon::parse($lastQueueInAlternative->scheduled_date)
+                    ->addMinutes($processingTime);
+            }
+        } else {
+            // Jika tidak ada jadwal alternatif, gunakan waktu setelah jeda selesai
+            $queueDate = Carbon::parse($waitingQueues[$firstPausedQueueIndex]->scheduled_date->format('Y-m-d'));
+            $nextScheduledDate = Carbon::parse($pauseEndTime->format('H:i:s'))->setDateFrom($queueDate);
+            $endDateTime = Carbon::parse($endTime->format('H:i:s'))->setDateFrom($queueDate);
+        }
 
         // Jadwalkan ulang semua antrian mulai dari antrian yang terjeda
         for ($i = $firstPausedQueueIndex; $i < count($waitingQueues); $i++) {
