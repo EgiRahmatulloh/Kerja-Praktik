@@ -49,7 +49,8 @@ class TemplateSuratController extends Controller
         
         // 2. Simpan file yang di-upload ke storage
         // Folder 'templates' akan dibuat di dalam 'storage/app/public/'
-        $path = $request->file('file_template')->store('templates', 'public');
+        $originalName = $request->file('file_template')->getClientOriginalName();
+        $path = $request->file('file_template')->storeAs('templates', $originalName, 'public');
         
         // 3. Simpan path file ke database
         TemplateSurat::create([
@@ -108,7 +109,8 @@ class TemplateSuratController extends Controller
             Storage::disk('public')->delete($template->template_path);
             
             // 2. Simpan file baru
-            $newPath = $request->file('file_template')->store('templates', 'public');
+            $originalName = $request->file('file_template')->getClientOriginalName();
+            $newPath = $request->file('file_template')->storeAs('templates', $originalName, 'public');
             
             // 3. Update path di database
             $template->template_path = $newPath;
