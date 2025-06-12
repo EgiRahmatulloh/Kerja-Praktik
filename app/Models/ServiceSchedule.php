@@ -10,6 +10,7 @@ class ServiceSchedule extends Model
     use HasFactory;
 
     protected $fillable = [
+        'user_id',
         'start_time',
         'end_time',
         'break_start_time',
@@ -26,4 +27,12 @@ class ServiceSchedule extends Model
         'is_paused' => 'boolean',
         'pause_end_time' => 'datetime',
     ];
+
+    /**
+     * Get the user that owns the service schedule.
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

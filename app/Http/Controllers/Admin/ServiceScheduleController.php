@@ -22,7 +22,7 @@ class ServiceScheduleController extends Controller
      */
     public function index()
     {
-        $schedules = ServiceSchedule::latest()->get();
+        $schedules = ServiceSchedule::where('user_id', auth()->id())->latest()->get();
         return view('admin.service-schedules.index', compact('schedules'));
     }
 
@@ -49,6 +49,7 @@ class ServiceScheduleController extends Controller
         ]);
 
         ServiceSchedule::create([
+            'user_id' => auth()->id(),
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
             'break_start_time' => $request->break_start_time,
@@ -66,7 +67,7 @@ class ServiceScheduleController extends Controller
      */
     public function edit($id)
     {
-        $schedule = ServiceSchedule::findOrFail($id);
+        $schedule = ServiceSchedule::where('user_id', auth()->id())->findOrFail($id);
         return view('admin.service-schedules.edit', compact('schedule'));
     }
 
@@ -84,7 +85,7 @@ class ServiceScheduleController extends Controller
             'is_active' => 'boolean'
         ]);
 
-        $schedule = ServiceSchedule::findOrFail($id);
+        $schedule = ServiceSchedule::where('user_id', auth()->id())->findOrFail($id);
         $schedule->update([
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
@@ -103,7 +104,7 @@ class ServiceScheduleController extends Controller
      */
     public function destroy($id)
     {
-        $schedule = ServiceSchedule::findOrFail($id);
+        $schedule = ServiceSchedule::where('user_id', auth()->id())->findOrFail($id);
         $schedule->delete();
 
         return redirect()->route('admin.service-schedules.index')
@@ -120,7 +121,7 @@ class ServiceScheduleController extends Controller
             'pause_end_time' => 'required',
         ]);
 
-        $schedule = ServiceSchedule::findOrFail($id);
+        $schedule = ServiceSchedule::where('user_id', auth()->id())->findOrFail($id);
         $schedule->update([
             'is_paused' => true,
             'pause_message' => $request->pause_message,
@@ -128,7 +129,8 @@ class ServiceScheduleController extends Controller
         ]);
 
         // Aktifkan jadwal alternatif jika ada
-        $alternativeSchedule = ServiceSchedule::where('is_active', false)
+        $alternativeSchedule = ServiceSchedule::where('user_id', auth()->id())
+            ->where('is_active', false)
             ->where('id', '!=', $schedule->id)
             ->first();
             
@@ -148,7 +150,7 @@ class ServiceScheduleController extends Controller
      */
     public function unpause($id)
     {
-        $schedule = ServiceSchedule::findOrFail($id);
+        $schedule = ServiceSchedule::where('user_id', auth()->id())->findOrFail($id);
         $schedule->update([
             'is_paused' => false,
             'pause_message' => null,
@@ -167,6 +169,7 @@ class ServiceScheduleController extends Controller
         // Ambil semua antrian dengan status waiting dan urutkan berdasarkan ID
         // untuk memastikan urutan yang konsisten
         $waitingQueues = LetterQueue::where('status', 'waiting')
+            ->where('service_schedule_id', $schedule->id) // Hanya antrian dari jadwal yang dijeda
             ->orderBy('id', 'asc')
             ->get();
 
@@ -174,8 +177,9 @@ class ServiceScheduleController extends Controller
             return; // Tidak ada antrian yang perlu disesuaikan
         }
 
-        // Cari jadwal alternatif yang aktif dan tidak dijeda
-        $alternativeSchedule = ServiceSchedule::where('is_active', true)
+        // Cari jadwal alternatif yang aktif dan tidak dijeda dari admin yang sama
+        $alternativeSchedule = ServiceSchedule::where('user_id', $schedule->user_id)
+            ->where('is_active', true)
             ->where('is_paused', false)
             ->where('id', '!=', $schedule->id)
             ->first();
@@ -217,6 +221,7 @@ class ServiceScheduleController extends Controller
             
             // Cari antrian terakhir di jadwal alternatif untuk hari yang sama
             $lastQueueInAlternative = LetterQueue::where('status', 'waiting')
+                ->where('service_schedule_id', $alternativeSchedule->id) // Hanya antrian dari jadwal alternatif
                 ->whereDate('scheduled_date', $queueDate)
                 ->where('scheduled_date', '>=', $nextScheduledDate)
                 ->where('scheduled_date', '<=', $endDateTime)

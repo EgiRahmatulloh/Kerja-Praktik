@@ -25,6 +25,11 @@ class LetterQueueController extends Controller
         $user = \Illuminate\Support\Facades\Auth::user();
         $query = LetterQueue::with(['filledLetter.user', 'filledLetter.letterType']);
 
+        // Filter antrian berdasarkan jadwal pelayanan milik admin yang sedang login
+        $query->whereHas('serviceSchedule', function($q) {
+            $q->where('user_id', auth()->id());
+        });
+
         // Filter berdasarkan kepemilikan template atau pengaturan berbagi
         if ($user->sub_role) {
             $query->whereHas('filledLetter.letterType.templateSurat', function ($q) use ($user) {
@@ -65,7 +70,9 @@ class LetterQueueController extends Controller
         }
 
         $queues = $query->latest()->paginate(10);
-        $serviceSchedule = ServiceSchedule::where('is_active', true)->first();
+        $serviceSchedule = ServiceSchedule::where('user_id', auth()->id())
+            ->where('is_active', true)
+            ->first();
 
         return view('admin.letter-queues.index', compact('queues', 'serviceSchedule'));
     }
@@ -153,10 +160,11 @@ class LetterQueueController extends Controller
         // Bersihkan antrian duplikat terlebih dahulu
         $this->cleanupDuplicateQueues();
 
-        // Cari antrian berikutnya berdasarkan ID
+        // Cari antrian berikutnya berdasarkan ID dari jadwal pelayanan yang sama
         // Ambil semua antrian waiting dengan ID lebih besar
         $waitingQueues = LetterQueue::where('status', 'waiting')
             ->where('id', '>', $completedQueue->id) // Gunakan ID untuk memastikan urutan sesuai dengan urutan antrian
+            ->where('service_schedule_id', $completedQueue->service_schedule_id) // Hanya antrian dari jadwal yang sama
             ->orderBy('id', 'asc')
             ->get();
 
@@ -205,9 +213,10 @@ class LetterQueueController extends Controller
      */
     private function adjustFollowingQueues($startQueue, $serviceSchedule)
     {
-        // Ambil semua antrian setelah antrian yang dimajukan
+        // Ambil semua antrian setelah antrian yang dimajukan dari jadwal pelayanan yang sama
         $followingQueues = LetterQueue::where('status', 'waiting')
             ->where('id', '>', $startQueue->id) // Gunakan ID untuk memastikan urutan sesuai dengan urutan antrian
+            ->where('service_schedule_id', $serviceSchedule->id) // Hanya antrian dari jadwal yang sama
             ->orderBy('id', 'asc')
             ->get();
 
@@ -310,8 +319,12 @@ class LetterQueueController extends Controller
      */
     private function cleanupDuplicateQueues()
     {
-        // Ambil semua antrian dengan status waiting
-        $waitingQueues = LetterQueue::where('status', 'waiting')->get();
+        // Ambil semua antrian dengan status waiting dari jadwal pelayanan milik admin yang sedang login
+        $waitingQueues = LetterQueue::where('status', 'waiting')
+            ->whereHas('serviceSchedule', function($q) {
+                $q->where('user_id', auth()->id());
+            })
+            ->get();
 
         // Kelompokkan berdasarkan filled_letter_id
         $groupedQueues = $waitingQueues->groupBy('filled_letter_id');

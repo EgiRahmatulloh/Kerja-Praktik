@@ -33,20 +33,39 @@ class UpdateExpiredQueues extends Command
     {
         $this->info('Starting to update expired letter queues...');
 
-        // Ambil jadwal pelayanan yang aktif
-        $serviceSchedule = ServiceSchedule::where('is_active', true)->first();
+        // Ambil semua jadwal pelayanan yang aktif
+        $activeSchedules = ServiceSchedule::where('is_active', true)->get();
 
-        if (!$serviceSchedule) {
+        if ($activeSchedules->isEmpty()) {
             $this->error('No active service schedule found!');
             return 1;
         }
 
-        // Ambil semua antrian dengan status waiting yang tanggalnya sudah lewat
-        $now = Carbon::now();
-        $expiredQueues = LetterQueue::where('status', 'waiting')
-            ->where('scheduled_date', '<', $now)
-            ->orderBy('id', 'asc') // Urutkan berdasarkan ID untuk memastikan urutan sesuai dengan urutan antrian
-            ->get();
+        // Proses setiap jadwal pelayanan yang aktif
+        foreach ($activeSchedules as $serviceSchedule) {
+            $this->info('Processing schedule for user: ' . $serviceSchedule->user->name);
+            
+            // Ambil antrian dengan status waiting yang tanggalnya sudah lewat untuk jadwal ini
+            $now = Carbon::now();
+            $expiredQueues = LetterQueue::where('status', 'waiting')
+                ->where('service_schedule_id', $serviceSchedule->id)
+                ->where('scheduled_date', '<', $now)
+                ->orderBy('id', 'asc')
+                ->get();
+
+            if ($expiredQueues->isEmpty()) {
+                $this->info('No expired queues found for this schedule.');
+                continue;
+            }
+
+            $this->processExpiredQueuesForSchedule($serviceSchedule, $expiredQueues);
+        }
+
+        return 0;
+    }
+
+    private function processExpiredQueuesForSchedule($serviceSchedule, $expiredQueues)
+    {
 
         // Hapus antrian duplikat berdasarkan filled_letter_id
         $uniqueQueues = collect();
@@ -62,17 +81,17 @@ class UpdateExpiredQueues extends Command
         $expiredQueues = $uniqueQueues;
 
         if ($expiredQueues->isEmpty()) {
-            $this->info('No expired queues found.');
-            return 0;
+            $this->info('No expired queues found for this schedule.');
+            return;
         }
 
-        $this->info('Found ' . $expiredQueues->count() . ' expired queues.');
+        $this->info('Found ' . $expiredQueues->count() . ' expired queues for this schedule.');
 
         // Tentukan tanggal layanan berikutnya (hari ini atau besok)
         $nextServiceDate = $this->getNextServiceDate($serviceSchedule);
 
-        // Hapus antrian duplikat dari database
-        $this->cleanupDuplicateQueues();
+        // Hapus antrian duplikat dari database untuk jadwal ini
+        $this->cleanupDuplicateQueues($serviceSchedule->id);
 
         // Proses setiap antrian yang sudah lewat
         $scheduledTime = Carbon::parse($nextServiceDate);
@@ -146,12 +165,14 @@ class UpdateExpiredQueues extends Command
      * Membersihkan antrian duplikat dari database
      * Hanya menyimpan satu antrian untuk setiap surat yang diisi
      */
-    private function cleanupDuplicateQueues()
+    private function cleanupDuplicateQueues($serviceScheduleId)
     {
-        $this->info('Cleaning up duplicate queues...');
+        $this->info('Cleaning up duplicate queues for this schedule...');
 
-        // Ambil semua antrian dengan status waiting
-        $waitingQueues = LetterQueue::where('status', 'waiting')->get();
+        // Ambil semua antrian dengan status waiting untuk jadwal ini
+        $waitingQueues = LetterQueue::where('status', 'waiting')
+            ->where('service_schedule_id', $serviceScheduleId)
+            ->get();
 
         // Kelompokkan berdasarkan filled_letter_id
         $groupedQueues = $waitingQueues->groupBy('filled_letter_id');

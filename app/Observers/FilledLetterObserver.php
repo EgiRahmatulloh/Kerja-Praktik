@@ -43,12 +43,30 @@ class FilledLetterObserver
             $existingQueue = LetterQueue::where('filled_letter_id', $filledLetter->id)->first();
 
             if (!$existingQueue) {
-                // Cari jadwal pelayanan yang aktif dan tidak dijeda
-                $serviceSchedule = ServiceSchedule::where('is_active', true)
+                // Tentukan admin yang akan menangani berdasarkan template surat
+                $templateOwner = $filledLetter->letterType->templateSurat->owner;
+                
+                // Cari jadwal pelayanan yang aktif dan tidak dijeda berdasarkan pemilik template
+                $serviceSchedule = ServiceSchedule::where('user_id', $templateOwner->id)
+                    ->where('is_active', true)
                     ->where('is_paused', false)
                     ->first();
                 
-                // Jika tidak ada jadwal aktif yang tidak dijeda, cari jadwal aktif lainnya
+                // Jika tidak ada jadwal aktif yang tidak dijeda, cari jadwal aktif lainnya dari admin yang sama
+                if (!$serviceSchedule) {
+                    $serviceSchedule = ServiceSchedule::where('user_id', $templateOwner->id)
+                        ->where('is_active', true)
+                        ->first();
+                }
+                
+                // Jika admin tersebut tidak memiliki jadwal, cari jadwal dari admin lain
+                if (!$serviceSchedule) {
+                    $serviceSchedule = ServiceSchedule::where('is_active', true)
+                        ->where('is_paused', false)
+                        ->first();
+                }
+                
+                // Jika masih tidak ada, cari jadwal aktif manapun
                 if (!$serviceSchedule) {
                     $serviceSchedule = ServiceSchedule::where('is_active', true)->first();
                 }
@@ -60,10 +78,21 @@ class FilledLetterObserver
                     $nextWorkingDay = $holidayService->isWorkingDay($twoDaysLater) ? $twoDaysLater : $holidayService->getNextWorkingDay($twoDaysLater);
                     $scheduledDate = $nextWorkingDay->setTime(8, 0); // Set jam 8 pagi sebagai default
                 } else {
-                    // Cari antrian terakhir untuk menentukan jadwal berikutnya
+                    // Cari antrian terakhir untuk menentukan jadwal berikutnya dari admin yang sama
                     $lastQueue = LetterQueue::where('status', 'waiting')
+                        ->where('service_schedule_id', $serviceSchedule->id)
                         ->orderBy('scheduled_date', 'desc')
                         ->first();
+                    
+                    // Jika tidak ada antrian dari admin yang sama, cari antrian terakhir secara umum
+                    if (!$lastQueue) {
+                        $lastQueue = LetterQueue::where('status', 'waiting')
+                            ->whereHas('serviceSchedule', function($q) use ($serviceSchedule) {
+                                $q->where('user_id', $serviceSchedule->user_id);
+                            })
+                            ->orderBy('scheduled_date', 'desc')
+                            ->first();
+                    }
 
                     if (!$lastQueue) {
                         // Jika belum ada antrian, jadwalkan di awal jam pelayanan 2 hari kerja berikutnya
@@ -119,6 +148,7 @@ class FilledLetterObserver
                 // Buat antrian baru
                 LetterQueue::create([
                     'filled_letter_id' => $filledLetter->id,
+                    'service_schedule_id' => $serviceSchedule ? $serviceSchedule->id : null,
                     'scheduled_date' => $scheduledDate,
                     'status' => 'waiting'
                 ]);

@@ -37,6 +37,7 @@
                         <thead class="table-dark">
                             <tr>
                                 <th width="5%">No</th>
+                                <th>Admin/Staf</th>
                                 <th>Jam Mulai</th>
                                 <th>Jam Selesai</th>
                                 <th>Jam Istirahat</th>
@@ -49,6 +50,7 @@
                             @forelse($schedules as $index => $schedule)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
+                                <td>{{ $schedule->user->name ?? 'Tidak diketahui' }}</td>
                                 <td>{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}</td>
                                 <td>{{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</td>
                                 <td>

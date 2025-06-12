@@ -11,6 +11,7 @@ class LetterQueue extends Model
 
     protected $fillable = [
         'filled_letter_id',
+        'service_schedule_id',
         'scheduled_date',
         'status',
         'notes'
@@ -26,5 +27,13 @@ class LetterQueue extends Model
     public function filledLetter()
     {
         return $this->belongsTo(FilledLetter::class);
+    }
+
+    /**
+     * Get the service schedule associated with this queue
+     */
+    public function serviceSchedule()
+    {
+        return $this->belongsTo(ServiceSchedule::class);
     }
 }

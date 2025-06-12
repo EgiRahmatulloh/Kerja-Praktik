@@ -52,4 +52,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(FilledLetter::class);
     }
+
+    /**
+     * Get all service schedules by this user
+     */
+    public function serviceSchedules()
+    {
+        return $this->hasMany(ServiceSchedule::class);
+    }
 }

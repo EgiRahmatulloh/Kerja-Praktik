@@ -83,8 +83,10 @@ class DashboardController extends Controller
         $data['printedLetters'] = (clone $filledLetterBaseQuery)->where('status', 'dicetak')->count();
         $data['recentLetters'] = (clone $filledLetterBaseQuery)->with(['user', 'letterType'])->latest()->take(5)->get();
 
-        // Ambil jadwal pelayanan yang aktif
-        $serviceSchedule = ServiceSchedule::where('is_active', true)->first();
+        // Ambil jadwal pelayanan yang aktif dari admin yang sedang login
+        $serviceSchedule = ServiceSchedule::where('user_id', auth()->id())
+            ->where('is_active', true)
+            ->first();
 
         // Tambahkan jadwal pelayanan ke data
         if ($serviceSchedule) {
@@ -94,9 +96,12 @@ class DashboardController extends Controller
         // Ambil data antrian saat ini
         $now = Carbon::now();
 
-        // Cari antrian yang sedang berlangsung (status processing)
+        // Cari antrian yang sedang berlangsung (status processing) dari jadwal admin yang sedang login
         $processingQueue = LetterQueue::with(['filledLetter.user'])
             ->where('status', 'processing')
+            ->whereHas('serviceSchedule', function($q) {
+                $q->where('user_id', auth()->id());
+            })
             ->first();
 
         if ($processingQueue) {
@@ -112,10 +117,13 @@ class DashboardController extends Controller
                 $data['currentQueueEndTime'] = Carbon::parse($processingQueue->scheduled_date)->addMinutes(30);
             }
         } else {
-            // Jika tidak ada yang sedang diproses, cari antrian berikutnya
+            // Jika tidak ada yang sedang diproses, cari antrian berikutnya dari jadwal admin yang sedang login
             // Cari antrian dengan status waiting yang jadwalnya paling dekat dengan waktu sekarang
             $nextQueue = LetterQueue::with(['filledLetter.user'])
                 ->where('status', 'waiting')
+                ->whereHas('serviceSchedule', function($q) {
+                    $q->where('user_id', auth()->id());
+                })
                 ->orderBy('scheduled_date', 'asc')
                 ->first();
 
