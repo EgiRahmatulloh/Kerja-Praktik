@@ -73,9 +73,8 @@ class DashboardController extends Controller
                   });
             });
         } else {
-            // Admin utama melihat semua surat, tetapi tetap kecualikan surat yang dibuat oleh admin lain
-            $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
-            $filledLetterBaseQuery->whereNotIn('user_id', $adminUserIds);
+            // Admin utama melihat semua surat, tidak perlu filter user_id
+            // Karena halaman ini untuk melihat semua pengajuan surat yang relevan
         }
 
         $data['pendingLetters'] = (clone $filledLetterBaseQuery)->where('status', 'pending')->count();

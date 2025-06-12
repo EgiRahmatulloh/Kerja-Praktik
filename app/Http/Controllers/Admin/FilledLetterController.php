@@ -52,6 +52,8 @@ class FilledLetterController extends Controller
         $query = FilledLetter::with(['user', 'letterType']);
 
         // Filter berdasarkan kepemilikan template atau pengaturan berbagi
+        $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id')->toArray();
+
         if ($user->sub_role) {
             $query->whereHas('letterType.templateSurat', function ($q) use ($user) {
                 $q->where('owner_id', $user->id)
@@ -62,10 +64,9 @@ class FilledLetterController extends Controller
                                 $q3->where('users.id', $user->id);
                             });
                     });
-            });
+            })->whereNotIn('user_id', $adminUserIds); // Tambahkan filter ini juga untuk sub-admin
         } else {
-            // Admin utama melihat semua surat, tetapi tetap kecualikan surat yang dibuat oleh admin lain
-            $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
+            // Admin utama melihat semua surat, tetapi tidak menampilkan surat yang dibuat oleh pengguna dengan role 'admin'
             $query->whereNotIn('user_id', $adminUserIds);
         }
 

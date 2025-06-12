@@ -81,13 +81,31 @@ class LetterController extends Controller
 
     public function history()
     {
+        $user = Auth::user();
+        $query = FilledLetter::with('letterType');
+
         // Ambil ID pengguna yang memiliki peran 'admin'
         $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
+        
+        // Selalu filter hanya surat yang dibuat oleh admin
+        $query->whereIn('user_id', $adminUserIds);
 
-        $letters = FilledLetter::with('letterType')
-            ->whereIn('user_id', $adminUserIds) // Filter hanya surat yang dibuat oleh admin
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
+        // Terapkan filter kepemilikan template atau pengaturan berbagi jika sub_role
+        if ($user->sub_role) {
+            $query->whereHas('letterType.templateSurat', function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        }
+        // Jika admin utama, tidak perlu filter tambahan berdasarkan template karena sudah difilter berdasarkan user_id admin
+
+        $letters = $query->orderBy('created_at', 'desc')->paginate(10);
 
         return View::make('admin.letters.history', compact('letters'));
     }
