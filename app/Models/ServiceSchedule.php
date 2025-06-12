@@ -12,6 +12,8 @@ class ServiceSchedule extends Model
     protected $fillable = [
         'start_time',
         'end_time',
+        'break_start_time',
+        'break_end_time',
         'is_active',
         'processing_time',
         'is_paused',

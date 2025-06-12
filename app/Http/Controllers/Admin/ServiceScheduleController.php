@@ -42,6 +42,8 @@ class ServiceScheduleController extends Controller
         $request->validate([
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
+            'break_start_time' => 'nullable|date_format:H:i',
+            'break_end_time' => 'nullable|date_format:H:i|after:break_start_time',
             'processing_time' => 'required|integer|min:1',
             'is_active' => 'boolean'
         ]);
@@ -49,6 +51,8 @@ class ServiceScheduleController extends Controller
         ServiceSchedule::create([
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
+            'break_start_time' => $request->break_start_time,
+            'break_end_time' => $request->break_end_time,
             'processing_time' => $request->processing_time,
             'is_active' => $request->has('is_active')
         ]);
@@ -74,6 +78,8 @@ class ServiceScheduleController extends Controller
         $request->validate([
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
+            'break_start_time' => 'nullable|date_format:H:i',
+            'break_end_time' => 'nullable|date_format:H:i|after:break_start_time',
             'processing_time' => 'required|integer|min:1',
             'is_active' => 'boolean'
         ]);
@@ -82,6 +88,8 @@ class ServiceScheduleController extends Controller
         $schedule->update([
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
+            'break_start_time' => $request->break_start_time,
+            'break_end_time' => $request->break_end_time,
             'processing_time' => $request->processing_time,
             'is_active' => $request->has('is_active')
         ]);
@@ -248,6 +256,9 @@ class ServiceScheduleController extends Controller
                 $endDateTime = Carbon::parse($endTime->format('H:i:s'))->setDateFrom($nextWorkingDay);
             }
 
+            // Cek apakah jadwal berada dalam jam istirahat
+            $nextScheduledDate = $this->adjustForBreakTime($nextScheduledDate, $schedule);
+            
             // Update jadwal antrian
             $queue->update([
                 'scheduled_date' => $nextScheduledDate->copy(),
@@ -255,6 +266,43 @@ class ServiceScheduleController extends Controller
 
             // Siapkan jadwal untuk antrian berikutnya
             $nextScheduledDate = $nextScheduledDate->copy()->addMinutes($processingTime);
+            
+            // Cek lagi apakah jadwal berikutnya berada dalam jam istirahat
+            $nextScheduledDate = $this->adjustForBreakTime($nextScheduledDate, $schedule);
         }
+    }
+
+    /**
+     * Menyesuaikan jadwal jika berada dalam jam istirahat
+     *
+     * @param Carbon $scheduledDate
+     * @param ServiceSchedule $serviceSchedule
+     * @return Carbon
+     */
+    private function adjustForBreakTime(Carbon $scheduledDate, ServiceSchedule $serviceSchedule)
+    {
+        // Jika tidak ada jam istirahat yang diset, return jadwal asli
+        if (!$serviceSchedule->break_start_time || !$serviceSchedule->break_end_time) {
+            return $scheduledDate;
+        }
+
+        $scheduleDate = $scheduledDate->format('Y-m-d');
+        $breakStartTime = Carbon::parse($serviceSchedule->break_start_time)->setDateFrom($scheduleDate);
+        $breakEndTime = Carbon::parse($serviceSchedule->break_end_time)->setDateFrom($scheduleDate);
+        $endTime = Carbon::parse($serviceSchedule->end_time)->setDateFrom($scheduleDate);
+
+        // Jika jadwal berada dalam jam istirahat, pindahkan ke setelah jam istirahat
+        if ($scheduledDate->between($breakStartTime, $breakEndTime)) {
+            $scheduledDate = $breakEndTime->copy();
+            
+            // Jika setelah jam istirahat melebihi jam selesai pelayanan, pindahkan ke hari kerja berikutnya
+            if ($scheduledDate->gt($endTime)) {
+                $holidayService = new HolidayService();
+                $nextWorkingDay = $holidayService->getNextWorkingDay(Carbon::parse($scheduleDate));
+                $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
+            }
+        }
+
+        return $scheduledDate;
     }
 }

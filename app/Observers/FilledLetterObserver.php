@@ -71,6 +71,9 @@ class FilledLetterObserver
                         $twoDaysLater = Carbon::today()->addDays(2);
                         $nextWorkingDay = $holidayService->isWorkingDay($twoDaysLater) ? $twoDaysLater : $holidayService->getNextWorkingDay($twoDaysLater);
                         $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
+                        
+                        // Cek apakah jadwal berada dalam jam istirahat
+                        $scheduledDate = $this->adjustForBreakTime($scheduledDate, $serviceSchedule);
                     } else {
                         // Jadwalkan sesuai waktu proses setelah antrian terakhir
                         $scheduledDate = Carbon::parse($lastQueue->scheduled_date)->addMinutes($serviceSchedule->processing_time);
@@ -99,6 +102,9 @@ class FilledLetterObserver
                             if ($scheduledDate->lt($startTime)) {
                                 $scheduledDate = $startTime;
                             }
+
+                            // Cek apakah jadwal berada dalam jam istirahat
+                            $scheduledDate = $this->adjustForBreakTime($scheduledDate, $serviceSchedule);
                             
                             // Pastikan tanggal yang dijadwalkan bukan hari libur
                             $holidayService = new HolidayService();
@@ -120,5 +126,39 @@ class FilledLetterObserver
                 Log::info("Menambahkan surat #{$filledLetter->id} ke antrian karena status diubah menjadi approved");
             }
         }
+    }
+
+    /**
+     * Menyesuaikan jadwal jika berada dalam jam istirahat
+     *
+     * @param Carbon $scheduledDate
+     * @param ServiceSchedule $serviceSchedule
+     * @return Carbon
+     */
+    private function adjustForBreakTime(Carbon $scheduledDate, ServiceSchedule $serviceSchedule)
+    {
+        // Jika tidak ada jam istirahat yang diset, return jadwal asli
+        if (!$serviceSchedule->break_start_time || !$serviceSchedule->break_end_time) {
+            return $scheduledDate;
+        }
+
+        $scheduleDate = $scheduledDate->format('Y-m-d');
+        $breakStartTime = Carbon::parse($serviceSchedule->break_start_time)->setDateFrom($scheduleDate);
+        $breakEndTime = Carbon::parse($serviceSchedule->break_end_time)->setDateFrom($scheduleDate);
+        $endTime = Carbon::parse($serviceSchedule->end_time)->setDateFrom($scheduleDate);
+
+        // Jika jadwal berada dalam jam istirahat, pindahkan ke setelah jam istirahat
+        if ($scheduledDate->between($breakStartTime, $breakEndTime)) {
+            $scheduledDate = $breakEndTime->copy();
+            
+            // Jika setelah jam istirahat melebihi jam selesai pelayanan, pindahkan ke hari kerja berikutnya
+            if ($scheduledDate->gt($endTime)) {
+                $holidayService = new HolidayService();
+                $nextWorkingDay = $holidayService->getNextWorkingDay(Carbon::parse($scheduleDate));
+                $scheduledDate = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
+            }
+        }
+
+        return $scheduledDate;
     }
 }

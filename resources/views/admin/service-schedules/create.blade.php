@@ -34,6 +34,24 @@
                     </div>
 
                     <div class="mb-3">
+                        <label for="break_start_time" class="form-label">Jam Mulai Istirahat (Opsional)</label>
+                        <input type="time" class="form-control @error('break_start_time') is-invalid @enderror" id="break_start_time" name="break_start_time" value="{{ old('break_start_time') }}">
+                        <small class="form-text text-muted">Jam mulai istirahat, tidak ada antrian surat pada jam ini</small>
+                        @error('break_start_time')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="break_end_time" class="form-label">Jam Selesai Istirahat (Opsional)</label>
+                        <input type="time" class="form-control @error('break_end_time') is-invalid @enderror" id="break_end_time" name="break_end_time" value="{{ old('break_end_time') }}">
+                        <small class="form-text text-muted">Jam selesai istirahat</small>
+                        @error('break_end_time')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="mb-3">
                         <label for="processing_time" class="form-label">Lama Proses (menit)</label>
                         <input type="number" class="form-control @error('processing_time') is-invalid @enderror" id="processing_time" name="processing_time" value="{{ old('processing_time', 10) }}" required min="1">
                         <small class="form-text text-muted">Waktu rata-rata yang dibutuhkan untuk memproses satu surat</small>
@@ -54,3 +72,55 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Validasi jam istirahat
+    $('#break_start_time, #break_end_time').on('change', function() {
+        var breakStart = $('#break_start_time').val();
+        var breakEnd = $('#break_end_time').val();
+        var serviceStart = $('#start_time').val();
+        var serviceEnd = $('#end_time').val();
+        
+        if (breakStart && breakEnd) {
+            if (breakStart >= breakEnd) {
+                alert('Jam selesai istirahat harus lebih besar dari jam mulai istirahat!');
+                $('#break_end_time').val('');
+                return;
+            }
+        }
+        
+        if (breakStart && serviceStart && breakStart <= serviceStart) {
+            alert('Jam mulai istirahat harus setelah jam mulai pelayanan!');
+            $('#break_start_time').val('');
+            return;
+        }
+        
+        if (breakEnd && serviceEnd && breakEnd >= serviceEnd) {
+            alert('Jam selesai istirahat harus sebelum jam selesai pelayanan!');
+            $('#break_end_time').val('');
+            return;
+        }
+    });
+    
+    // Validasi jam pelayanan
+    $('#start_time, #end_time').on('change', function() {
+        var breakStart = $('#break_start_time').val();
+        var breakEnd = $('#break_end_time').val();
+        var serviceStart = $('#start_time').val();
+        var serviceEnd = $('#end_time').val();
+        
+        if (breakStart && serviceStart && breakStart <= serviceStart) {
+            alert('Jam mulai istirahat harus setelah jam mulai pelayanan!');
+            $('#break_start_time').val('');
+        }
+        
+        if (breakEnd && serviceEnd && breakEnd >= serviceEnd) {
+            alert('Jam selesai istirahat harus sebelum jam selesai pelayanan!');
+            $('#break_end_time').val('');
+        }
+    });
+});
+</script>
+@endpush

@@ -39,6 +39,7 @@
                                 <th width="5%">No</th>
                                 <th>Jam Mulai</th>
                                 <th>Jam Selesai</th>
+                                <th>Jam Istirahat</th>
                                 <th>Lama Proses (menit)</th>
                                 <th>Status</th>
                                 <th width="25%">Aksi</th>
@@ -50,6 +51,13 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}</td>
                                 <td>{{ \Carbon\Carbon::parse($schedule->end_time)->format('H:i') }}</td>
+                                <td>
+                                    @if($schedule->break_start_time && $schedule->break_end_time)
+                                        {{ \Carbon\Carbon::parse($schedule->break_start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule->break_end_time)->format('H:i') }}
+                                    @else
+                                        <span class="text-muted">Tidak ada</span>
+                                    @endif
+                                </td>
                                 <td>{{ $schedule->processing_time }}</td>
                                 <td>
                                     @if($schedule->is_active)
