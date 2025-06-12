@@ -33,12 +33,31 @@ class NotificationController extends Controller
             }
         }
         
-        // Ambil surat baru yang belum dilihat
-        $newLetters = FilledLetter::with('user', 'letterType')
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $query = FilledLetter::with('user', 'letterType')
             ->where('id', '>', $lastSeenId)
             ->where('status', 'pending')
-            ->orderBy('id', 'desc')
-            ->get();
+            ->orderBy('id', 'desc');
+
+        // Terapkan filter kepemilikan template atau pengaturan berbagi jika sub_role
+        if ($user->sub_role) {
+            $query->whereHas('letterType.templateSurat', function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        } else {
+            // Admin utama melihat semua surat, tetapi tetap kecualikan surat yang dibuat oleh admin lain
+            $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
+            $query->whereNotIn('user_id', $adminUserIds);
+        }
+
+        $newLetters = $query->get();
         
         // Jika ada surat baru, update last_seen_letter_id di session
         if ($newLetters->count() > 0) {
@@ -66,8 +85,29 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        // Ambil ID surat terbaru
-        $latestLetter = FilledLetter::latest()->first();
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $query = FilledLetter::latest();
+
+        // Terapkan filter kepemilikan template atau pengaturan berbagi jika sub_role
+        if ($user->sub_role) {
+            $query->whereHas('letterType.templateSurat', function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        } else {
+            // Admin utama melihat semua surat, tetapi tetap kecualikan surat yang dibuat oleh admin lain
+            $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
+            $query->whereNotIn('user_id', $adminUserIds);
+        }
+
+        // Ambil ID surat terbaru yang relevan dengan admin
+        $latestLetter = $query->first();
         
         if ($latestLetter) {
             Session::put('last_seen_letter_id', $latestLetter->id);

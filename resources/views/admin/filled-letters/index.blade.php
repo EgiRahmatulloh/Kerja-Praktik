@@ -32,7 +32,7 @@
                     </div>
                     <div class="col-md-4">
                         <div class="input-group">
-                            <input type="text" class="form-control" name="search" placeholder="Cari nama pemohon..." value="{{ request('search') }}">
+                            <input type="text" class="form-control" name="search" placeholder="Cari nama pemohon..." value="{{ $searchQuery }}">
                             <button class="btn btn-outline-secondary" type="submit">
                                 <i class="bi bi-search"></i>
                             </button>

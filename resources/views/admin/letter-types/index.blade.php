@@ -20,6 +20,8 @@
                             <th>Nama Jenis Surat</th>
                             <th>Deskripsi</th>
                             <th>Template</th>
+                            <th>Pemilik Template</th>
+                            <th>Berbagi Template</th>
                             <th>Jumlah Variabel</th>
                             <th>Status</th>
                             <th>Aksi</th>
@@ -32,6 +34,16 @@
                             <td>{{ $type->nama_jenis }}</td>
                             <td>{{ Str::limit($type->deskripsi, 50) }}</td>
                             <td>{{ $type->templateSurat->nama_template }}</td>
+                            <td>{{ $type->templateSurat->owner->name ?? 'N/A' }}</td>
+                            <td>
+                                @if ($type->templateSurat->share_setting == 'public')
+                                    <span class="badge bg-info">Publik</span>
+                                @elseif ($type->templateSurat->share_setting == 'limited')
+                                    <span class="badge bg-warning">Terbatas</span>
+                                @else
+                                    <span class="badge bg-secondary">Pribadi</span>
+                                @endif
+                            </td>
                             <td>{{ $type->dataItems->count() }}</td>
                             <td>
                                 @if($type->is_public)
@@ -58,7 +70,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center">Tidak ada jenis surat</td>
+                            <td colspan="9" class="text-center">Tidak ada jenis surat</td>
                         </tr>
                         @endforelse
                     </tbody>

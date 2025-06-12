@@ -22,15 +22,6 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
-        // Membuat user admin
-        User::create([
-            'name' => 'Administrator',
-            'username' => 'admin',
-            'email' => 'admin@admin.com',
-            'password' => bcrypt('admin'),
-            'role' => 'admin'
-        ]);
-        
         // Membuat user biasa
         User::create([
             'name' => 'User Biasa',
@@ -39,10 +30,14 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('user'),
             'role' => 'user'
         ]);
-        
+
         // Menjalankan seeder lainnya
         $this->call([
+            Admin1Seeder::class,
+            Admin2Seeder::class,
+            Admin3Seeder::class,
             ServiceScheduleSeeder::class,
+            DataItemSeeder::class
         ]);
     }
 }

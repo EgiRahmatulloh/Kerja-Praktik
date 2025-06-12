@@ -7,6 +7,7 @@ use App\Models\DataItem;
 use App\Models\LetterType;
 use App\Models\TemplateSurat;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LetterTypeController extends Controller
 {
@@ -19,14 +20,56 @@ class LetterTypeController extends Controller
     // Menampilkan daftar jenis surat
     public function index()
     {
-        $letterTypes = LetterType::with('templateSurat')->latest()->paginate(10);
+        $user = Auth::user();
+        $query = LetterType::with('templateSurat');
+
+        if ($user->sub_role) {
+            // Admin dengan sub-role hanya melihat jenis surat yang templatenya miliknya atau yang dibagikan publik/terbatas
+            $query->whereHas('templateSurat', function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        }
+        // Admin utama melihat semua jenis surat (tidak ada filter tambahan)
+        
+        $letterTypes = $query->latest()->paginate(10);
         return view('admin.letter-types.index', compact('letterTypes'));
     }
 
     // Menampilkan form untuk membuat jenis surat baru
     public function create()
     {
-        $templates = TemplateSurat::where('aktif', true)->get();
+        $user = Auth::user();
+        $templateQuery = TemplateSurat::where('aktif', true);
+
+        if ($user->sub_role) {
+            $templateQuery->where(function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        } else {
+            $templateQuery->where('owner_id', $user->id)
+                          ->orWhere('share_setting', 'public')
+                          ->orWhere(function ($q2) use ($user) {
+                              $q2->where('share_setting', 'limited')
+                                 ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                                     $q3->where('users.id', $user->id);
+                                 });
+                          });
+        }
+        $templates = $templateQuery->get();
         $dataItems = DataItem::all();
         return view('admin.letter-types.create', compact('templates', 'dataItems'));
     }
@@ -68,7 +111,32 @@ class LetterTypeController extends Controller
     public function edit($id)
     {
         $letterType = LetterType::with('dataItems')->findOrFail($id);
-        $templates = TemplateSurat::where('aktif', true)->get();
+        
+        $user = Auth::user();
+        $templateQuery = TemplateSurat::where('aktif', true);
+
+        if ($user->sub_role) {
+            $templateQuery->where(function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        } else {
+            $templateQuery->where('owner_id', $user->id)
+                          ->orWhere('share_setting', 'public')
+                          ->orWhere(function ($q2) use ($user) {
+                              $q2->where('share_setting', 'limited')
+                                 ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                                     $q3->where('users.id', $user->id);
+                                 });
+                          });
+        }
+        $templates = $templateQuery->get();
         $dataItems = DataItem::all();
         $selectedDataItems = $letterType->dataItems->pluck('id')->toArray();
 

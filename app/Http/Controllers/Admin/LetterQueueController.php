@@ -22,7 +22,28 @@ class LetterQueueController extends Controller
      */
     public function index(Request $request)
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
         $query = LetterQueue::with(['filledLetter.user', 'filledLetter.letterType']);
+
+        // Filter berdasarkan kepemilikan template atau pengaturan berbagi
+        if ($user->sub_role) {
+            $query->whereHas('filledLetter.letterType.templateSurat', function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        } else {
+            // Admin utama melihat semua antrian, tetapi tetap kecualikan antrian surat yang dibuat oleh admin lain
+            $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
+            $query->whereHas('filledLetter', function ($q) use ($adminUserIds) {
+                $q->whereNotIn('user_id', $adminUserIds);
+            });
+        }
 
         // Filter berdasarkan status
         if ($request->filled('status')) {

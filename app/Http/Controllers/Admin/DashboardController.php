@@ -11,6 +11,7 @@ use App\Models\TemplateSurat;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
@@ -22,16 +23,65 @@ class DashboardController extends Controller
 
     public function index()
     {
+        $user = Auth::user();
+        $templateQuery = TemplateSurat::query();
+
+        if ($user->sub_role) {
+            $templateQuery->where(function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        } else {
+            $templateQuery->where('owner_id', $user->id)
+                          ->orWhere('share_setting', 'public')
+                          ->orWhere(function ($q2) use ($user) {
+                              $q2->where('share_setting', 'limited')
+                                 ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                                     $q3->where('users.id', $user->id);
+                                 });
+                          });
+        }
+
         // Ambil data untuk card-card dashboard
         $data = [
-            'totalTemplates' => TemplateSurat::count(),
-            'totalLetterTypes' => LetterType::count(),
+            'totalTemplates' => $templateQuery->count(),
+            'totalLetterTypes' => LetterType::whereHas('templateSurat', function ($q) use ($templateQuery) {
+                $q->whereIn('id', $templateQuery->pluck('id'));
+            })->count(),
             'totalUsers' => User::where('role', 'user')->count(),
-            'pendingLetters' => FilledLetter::where('status', 'pending')->count(),
-            'approvedLetters' => FilledLetter::where('status', 'approved')->count(),
-            'printedLetters' => FilledLetter::where('status', 'dicetak')->count(),
-            'recentLetters' => FilledLetter::with(['user', 'letterType'])->latest()->take(5)->get()
         ];
+
+        // Query dasar untuk FilledLetter yang akan difilter
+        $filledLetterBaseQuery = FilledLetter::query();
+
+        // Terapkan filter kepemilikan template atau pengaturan berbagi jika sub_role
+        if ($user->sub_role) {
+            $filledLetterBaseQuery->whereHas('letterType.templateSurat', function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        } else {
+            // Admin utama melihat semua surat, tetapi tetap kecualikan surat yang dibuat oleh admin lain
+            $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
+            $filledLetterBaseQuery->whereNotIn('user_id', $adminUserIds);
+        }
+
+        $data['pendingLetters'] = (clone $filledLetterBaseQuery)->where('status', 'pending')->count();
+        $data['approvedLetters'] = (clone $filledLetterBaseQuery)->where('status', 'approved')->count();
+        $data['printedLetters'] = (clone $filledLetterBaseQuery)->where('status', 'dicetak')->count();
+        $data['recentLetters'] = (clone $filledLetterBaseQuery)->with(['user', 'letterType'])->latest()->take(5)->get();
 
         // Ambil jadwal pelayanan yang aktif
         $serviceSchedule = ServiceSchedule::where('is_active', true)->first();

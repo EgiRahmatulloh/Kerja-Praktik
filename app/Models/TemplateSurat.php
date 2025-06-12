@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage; // Penting untuk helper path
+use Illuminate\Support\Facades\Storage;
 
 class TemplateSurat extends Model
 {
@@ -23,6 +23,8 @@ class TemplateSurat extends Model
         'nama_template',
         'template_path', // Menggantikan 'konten_template'
         'aktif',
+        'share_setting',
+        'owner_id',
     ];
 
     /**
@@ -88,5 +90,15 @@ class TemplateSurat extends Model
     public function letterTypes()
     {
         return $this->hasMany(LetterType::class, 'template_surat_id');
+    }
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function sharedWithUsers()
+    {
+        return $this->belongsToMany(User::class, 'template_surat_shared_users', 'template_surat_id', 'user_id');
     }
 }

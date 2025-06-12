@@ -21,6 +21,8 @@
                                 <th scope="col">#</th>
                                 <th scope="col">Nama Template</th>
                                 <th scope="col">Status Aktif</th>
+                                <th scope="col">Pemilik</th>
+                                <th scope="col">Berbagi</th>
                                 <th scope="col">Aksi</th>
                             </tr>
                         </thead>
@@ -36,6 +38,16 @@
                                             <span class="badge bg-danger">Tidak Aktif</span>
                                         @endif
                                     </td>
+                                    <td>{{ $template->owner->name ?? 'N/A' }}</td>
+                                    <td>
+                                        @if ($template->share_setting == 'public')
+                                            <span class="badge bg-info">Publik</span>
+                                        @elseif ($template->share_setting == 'limited')
+                                            <span class="badge bg-warning">Terbatas</span>
+                                        @else
+                                            <span class="badge bg-secondary">Pribadi</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <a href="{{ route('admin.templates.show', $template->id) }}" class="btn btn-info btn-sm">Detail</a>
                                         <a href="{{ route('admin.templates.edit', $template->id) }}" class="btn btn-warning btn-sm">Edit</a>
@@ -48,7 +60,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center">Tidak ada template surat.</td>
+                                    <td colspan="6" class="text-center">Tidak ada template surat.</td>
                                 </tr>
                             @endforelse
                         </tbody>

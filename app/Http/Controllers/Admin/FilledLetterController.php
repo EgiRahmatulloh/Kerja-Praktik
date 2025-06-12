@@ -48,13 +48,26 @@ class FilledLetterController extends Controller
     // Menampilkan daftar surat yang sudah diisi
     public function index(Request $request)
     {
+        $user = \Illuminate\Support\Facades\Auth::user();
         $query = FilledLetter::with(['user', 'letterType']);
 
-        // Ambil ID pengguna yang memiliki peran 'admin'
-        $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
-
-        // Kecualikan surat yang dibuat oleh admin
-        $query->whereNotIn('user_id', $adminUserIds);
+        // Filter berdasarkan kepemilikan template atau pengaturan berbagi
+        if ($user->sub_role) {
+            $query->whereHas('letterType.templateSurat', function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        } else {
+            // Admin utama melihat semua surat, tetapi tetap kecualikan surat yang dibuat oleh admin lain
+            $adminUserIds = \App\Models\User::where('role', 'admin')->pluck('id');
+            $query->whereNotIn('user_id', $adminUserIds);
+        }
 
         // Filter berdasarkan status jika ada di request
         if ($request->filled('status')) {
@@ -70,13 +83,37 @@ class FilledLetterController extends Controller
             $query->where('letter_type_id', $request->letter_type_id);
         }
 
+        // Filter pencarian nama pemohon
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+
         $letters = $query->latest()->paginate(10);
 
-        $letterTypes = LetterType::all();
+        // Ambil letter types yang sesuai dengan filter admin
+        $letterTypeQuery = LetterType::query();
+        if ($user->sub_role) {
+            $letterTypeQuery->whereHas('templateSurat', function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        }
+        $letterTypes = $letterTypeQuery->get();
+
         $selectedLetterType = $request->letter_type_id;
         $selectedStatus = $request->status;
+        $searchQuery = $request->search;
 
-        return view('admin.filled-letters.index', compact('letters', 'letterTypes', 'selectedLetterType', 'selectedStatus'));
+        return view('admin.filled-letters.index', compact('letters', 'letterTypes', 'selectedLetterType', 'selectedStatus', 'searchQuery'));
     }
 
     // Menampilkan detail surat yang sudah diisi
@@ -146,7 +183,23 @@ class FilledLetterController extends Controller
             ]);
         }
 
-        $letterTypes = LetterType::all();
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $letterTypeQuery = LetterType::query();
+
+        if ($user->sub_role) {
+            $letterTypeQuery->whereHas('templateSurat', function ($q) use ($user) {
+                $q->where('owner_id', $user->id)
+                  ->orWhere('share_setting', 'public')
+                  ->orWhere(function ($q2) use ($user) {
+                      $q2->where('share_setting', 'limited')
+                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                             $q3->where('users.id', $user->id);
+                         });
+                  });
+            });
+        }
+        $letterTypes = $letterTypeQuery->get();
+
         return view('admin.filled-letters.edit', compact('letter', 'letterTypes'));
     }
 
