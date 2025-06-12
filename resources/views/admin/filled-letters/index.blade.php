@@ -149,8 +149,10 @@
                                                 <div class="row">
                                                     @foreach($letter->filled_data as $key => $value)
                                                     <div class="col-md-6 mb-2">
-                                                        <strong>{{ ucwords(str_replace('_', ' ', $key)) }}:</strong>
-                                                        <span class="text-muted">{{ $value }}</span>
+                                                        <p class="mb-0 text-primary"><strong>{{ ucwords(str_replace('_', ' ', $key)) }}</strong></p>
+                                                        <div class="border p-2 rounded bg-white">
+                                                            <p class="text-muted mb-0">{{ $value }}</p>
+                                                        </div>
                                                     </div>
                                                     @endforeach
                                                 </div>
