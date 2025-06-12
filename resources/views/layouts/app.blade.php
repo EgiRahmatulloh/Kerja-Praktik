@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,32 +20,39 @@
             z-index: 100;
             padding-top: 20px;
         }
+
         .sidebar .nav-link {
             color: rgba(255, 255, 255, 0.8);
             padding: 10px 20px;
             margin-bottom: 5px;
         }
+
         .sidebar .nav-link:hover {
             color: #fff;
             background-color: rgba(255, 255, 255, 0.1);
         }
+
         .sidebar .nav-link.active {
             color: #fff;
             background-color: rgba(255, 255, 255, 0.2);
         }
+
         .sidebar .nav-link i {
             margin-right: 10px;
         }
+
         .main-content {
             margin-left: 250px;
             padding: 20px;
         }
+
         .navbar {
             margin-left: 250px;
             padding: 10px 20px;
         }
     </style>
 </head>
+
 <body>
     <!-- Sidebar -->
     <div class="sidebar">
@@ -54,60 +62,60 @@
         </div>
         <ul class="nav flex-column">
             @if(Auth::user()->role === 'admin')
-                <!-- Menu Admin -->
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
-                        <i class="bi bi-speedometer2"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.templates.*') ? 'active' : '' }}" href="{{ route('admin.templates.index') }}">
-                        <i class="bi bi-file-earmark-text"></i> Template Surat
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.data-items.*') ? 'active' : '' }}" href="{{ route('admin.data-items.index') }}">
-                        <i class="bi bi-list-check"></i> Variabel Surat
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.letter-types.*') ? 'active' : '' }}" href="{{ route('admin.letter-types.index') }}">
-                        <i class="bi bi-file-earmark-richtext"></i> Jenis Surat
-                    </a>
-                </li>
-                <!-- Di dalam menu admin (sekitar baris 75, setelah menu Antrian Surat) -->
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.service-schedules.*') ? 'active' : '' }}" href="{{ route('admin.service-schedules.index') }}">
-                        <i class="bi bi-clock"></i> Jadwal Pelayanan
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.filled-letters.*') ? 'active' : '' }}" href="{{ route('admin.filled-letters.index') }}">
-                        <i class="bi bi-envelope"></i> Pengajuan Surat
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('admin.letter-queues.*') ? 'active' : '' }}" href="{{ route('admin.letter-queues.index') }}">
-                        <i class="bi bi-hourglass-split"></i> Antrian Surat
-                    </a>
-                </li>
+            <!-- Menu Admin -->
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.templates.*') ? 'active' : '' }}" href="{{ route('admin.templates.index') }}">
+                    <i class="bi bi-file-earmark-text"></i> Template Surat
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.data-items.*') ? 'active' : '' }}" href="{{ route('admin.data-items.index') }}">
+                    <i class="bi bi-list-check"></i> Variabel Surat
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.letter-types.*') ? 'active' : '' }}" href="{{ route('admin.letter-types.index') }}">
+                    <i class="bi bi-file-earmark-richtext"></i> Jenis Surat
+                </a>
+            </li>
+            <!-- Di dalam menu admin (sekitar baris 75, setelah menu Antrian Surat) -->
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.service-schedules.*') ? 'active' : '' }}" href="{{ route('admin.service-schedules.index') }}">
+                    <i class="bi bi-clock"></i> Jadwal Pelayanan
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.filled-letters.*') ? 'active' : '' }}" href="{{ route('admin.filled-letters.index') }}">
+                    <i class="bi bi-envelope"></i> Pengajuan Surat
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('admin.letter-queues.*') ? 'active' : '' }}" href="{{ route('admin.letter-queues.index') }}">
+                    <i class="bi bi-hourglass-split"></i> Antrian Surat
+                </a>
+            </li>
             @else
-                <!-- Menu User -->
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}" href="{{ route('user.dashboard') }}">
-                        <i class="bi bi-speedometer2"></i> Dashboard
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('user.letters.create') ? 'active' : '' }}" href="{{ route('user.letters.create') }}">
-                        <i class="bi bi-file-earmark-plus"></i> Buat Surat Baru
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {{ request()->routeIs('user.letters.index') ? 'active' : '' }}" href="{{ route('user.letters.index') }}">
-                        <i class="bi bi-file-earmark-text"></i> Daftar Surat Saya
-                    </a>
-                </li>
+            <!-- Menu User -->
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}" href="{{ route('user.dashboard') }}">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('user.letters.create') ? 'active' : '' }}" href="{{ route('user.letters.create') }}">
+                    <i class="bi bi-file-earmark-plus"></i> Buat Surat Baru
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ request()->routeIs('user.letters.index') ? 'active' : '' }}" href="{{ route('user.letters.index') }}">
+                    <i class="bi bi-file-earmark-text"></i> Daftar Surat Saya
+                </a>
+            </li>
             @endif
             <li class="nav-item mt-3">
                 <form action="{{ route('logout') }}" method="POST">
@@ -145,9 +153,10 @@
         @yield('content')
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    @yield('scripts')
-    
+    @stack('scripts')
+
     <script>
         $(document).ready(function() {
             // Setup AJAX untuk CSRF token
@@ -159,4 +168,5 @@
         });
     </script>
 </body>
+
 </html>

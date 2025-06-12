@@ -7,6 +7,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <meta content="" name="keywords">
     <meta content="" name="description">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!-- Favicon -->
     <link href="{{ asset('favicon.ico') }}" rel="icon">
@@ -215,7 +216,7 @@
     <!-- Template Javascript -->
     <script src="{{ asset('dashmin/js/main.js') }}"></script>
 
-    @yield('scripts')
+    @stack('scripts')
 
     <!-- Notification Sound -->
     <audio id="notificationSound" src="{{ asset('sounds/notification.mp3') }}" preload="auto"></audio>

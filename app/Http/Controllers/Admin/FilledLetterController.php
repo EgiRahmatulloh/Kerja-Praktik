@@ -55,13 +55,13 @@ class FilledLetterController extends Controller
         if ($user->sub_role) {
             $query->whereHas('letterType.templateSurat', function ($q) use ($user) {
                 $q->where('owner_id', $user->id)
-                  ->orWhere('share_setting', 'public')
-                  ->orWhere(function ($q2) use ($user) {
-                      $q2->where('share_setting', 'limited')
-                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
-                             $q3->where('users.id', $user->id);
-                         });
-                  });
+                    ->orWhere('share_setting', 'public')
+                    ->orWhere(function ($q2) use ($user) {
+                        $q2->where('share_setting', 'limited')
+                            ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                                $q3->where('users.id', $user->id);
+                            });
+                    });
             });
         } else {
             // Admin utama melihat semua surat, tetapi tetap kecualikan surat yang dibuat oleh admin lain
@@ -98,13 +98,13 @@ class FilledLetterController extends Controller
         if ($user->sub_role) {
             $letterTypeQuery->whereHas('templateSurat', function ($q) use ($user) {
                 $q->where('owner_id', $user->id)
-                  ->orWhere('share_setting', 'public')
-                  ->orWhere(function ($q2) use ($user) {
-                      $q2->where('share_setting', 'limited')
-                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
-                             $q3->where('users.id', $user->id);
-                         });
-                  });
+                    ->orWhere('share_setting', 'public')
+                    ->orWhere(function ($q2) use ($user) {
+                        $q2->where('share_setting', 'limited')
+                            ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                                $q3->where('users.id', $user->id);
+                            });
+                    });
             });
         }
         $letterTypes = $letterTypeQuery->get();
@@ -189,13 +189,13 @@ class FilledLetterController extends Controller
         if ($user->sub_role) {
             $letterTypeQuery->whereHas('templateSurat', function ($q) use ($user) {
                 $q->where('owner_id', $user->id)
-                  ->orWhere('share_setting', 'public')
-                  ->orWhere(function ($q2) use ($user) {
-                      $q2->where('share_setting', 'limited')
-                         ->whereHas('sharedWithUsers', function ($q3) use ($user) {
-                             $q3->where('users.id', $user->id);
-                         });
-                  });
+                    ->orWhere('share_setting', 'public')
+                    ->orWhere(function ($q2) use ($user) {
+                        $q2->where('share_setting', 'limited')
+                            ->whereHas('sharedWithUsers', function ($q3) use ($user) {
+                                $q3->where('users.id', $user->id);
+                            });
+                    });
             });
         }
         $letterTypes = $letterTypeQuery->get();
@@ -237,64 +237,91 @@ class FilledLetterController extends Controller
     // Memperbarui status surat
     public function updateStatus(Request $request, $id)
     {
-        $letter = FilledLetter::findOrFail($id);
+        try {
+            $letter = FilledLetter::findOrFail($id);
 
-        // Validasi dasar
-        $rules = [
-            'status' => 'required|in:pending,approved,rejected,printed',
-            'no_surat' => 'nullable|string',
-        ];
+            // Validasi dasar
+            $rules = [
+                'status' => 'required|in:pending,approved,rejected,printed',
+                'no_surat' => 'nullable|string',
+            ];
 
-        // Tambahkan validasi wajib untuk catatan_admin jika status rejected
-        if ($request->input('status') === 'rejected') {
-            $rules['catatan_admin'] = 'required|string';
-        } else {
-            $rules['catatan_admin'] = 'nullable|string';
-        }
-
-        $validated = $request->validate($rules, [
-            'catatan_admin.required' => 'Catatan admin wajib diisi jika status ditolak'
-        ]);
-
-        // Log untuk debugging
-        \Illuminate\Support\Facades\Log::info('Update Status Request:', [
-            'letter_id' => $id,
-            'current_status' => $letter->status,
-            'new_status' => $validated['status'],
-            'catatan_admin' => $validated['catatan_admin'] ?? null,
-        ]);
-
-        // Set properti model secara langsung
-        $letter->status = $validated['status'];
-        $letter->catatan_admin = $validated['catatan_admin'] ?? null;
-
-        // Update nomor surat jika ada
-        if (!empty($validated['no_surat'])) {
-            $letter->no_surat = $validated['no_surat'];
-        }
-
-        // Jika status diubah menjadi pending atau rejected, hapus dari antrian
-        if (($validated['status'] == 'pending' || $validated['status'] == 'rejected')) {
-            // Cari dan hapus antrian yang terkait dengan surat ini
-            $queue = LetterQueue::where('filled_letter_id', $letter->id)->first();
-            if ($queue) {
-                $queue->delete();
-                // Log penghapusan antrian
-                \Illuminate\Support\Facades\Log::info("Menghapus antrian #{$queue->id} karena status surat #{$letter->id} diubah menjadi {$validated['status']}");
+            // Tambahkan validasi wajib untuk catatan_admin jika status rejected
+            if ($request->input('status') === 'rejected') {
+                $rules['catatan_admin'] = 'required|string';
+            } else {
+                $rules['catatan_admin'] = 'nullable|string';
             }
+
+            $validated = $request->validate($rules, [
+                'catatan_admin.required' => 'Catatan admin wajib diisi jika status ditolak'
+            ]);
+
+            // Log untuk debugging
+            \Illuminate\Support\Facades\Log::info('Update Status Request:', [
+                'letter_id' => $id,
+                'current_status' => $letter->status,
+                'new_status' => $validated['status'],
+                'catatan_admin' => $validated['catatan_admin'] ?? null,
+            ]);
+
+            // Set properti model secara langsung
+            $letter->status = $validated['status'];
+            $letter->catatan_admin = $validated['catatan_admin'] ?? null;
+
+            // Update nomor surat jika ada
+            if (!empty($validated['no_surat'])) {
+                $letter->no_surat = $validated['no_surat'];
+            }
+
+            // Jika status diubah menjadi pending atau rejected, hapus dari antrian
+            if (($validated['status'] == 'pending' || $validated['status'] == 'rejected')) {
+                // Cari dan hapus antrian yang terkait dengan surat ini
+                $queue = LetterQueue::where('filled_letter_id', $letter->id)->first();
+                if ($queue) {
+                    $queue->delete();
+                    // Log penghapusan antrian
+                    \Illuminate\Support\Facades\Log::info("Menghapus antrian #{$queue->id} karena status surat #{$letter->id} diubah menjadi {$validated['status']}");
+                }
+            }
+
+            // Update surat dan log hasilnya
+            $saved = $letter->save();
+            \Illuminate\Support\Facades\Log::info('Status surat berhasil diperbarui (force dirty):', [
+                'letter_id' => $letter->id,
+                'new_status' => $letter->status,
+                'catatan_admin' => $letter->catatan_admin,
+                'saved_result' => $saved
+            ]);
+
+            // Cek apakah request adalah AJAX
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Status surat berhasil diperbarui.',
+                    'new_status' => $letter->status,
+                    'catatan_admin' => $letter->catatan_admin
+                ]);
+            }
+
+            return redirect()->route('admin.filled-letters.index')
+                ->with('success', 'Status surat berhasil diperbarui.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error updating status:', [
+                'letter_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat memperbarui status: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('admin.filled-letters.index')
+                ->with('error', 'Terjadi kesalahan saat memperbarui status.');
         }
-
-        // Update surat dan log hasilnya
-        $saved = $letter->save();
-        \Illuminate\Support\Facades\Log::info('Status surat berhasil diperbarui (force dirty):', [
-            'letter_id' => $letter->id,
-            'new_status' => $letter->status,
-            'catatan_admin' => $letter->catatan_admin,
-            'saved_result' => $saved
-        ]);
-
-        return redirect()->route('admin.filled-letters.index')
-            ->with('success', 'Status surat berhasil diperbarui.');
     }
 
     // Menampilkan preview surat dalam bentuk PDF
@@ -327,9 +354,18 @@ class FilledLetterController extends Controller
 
         // Ganti variabel tanggal surat
         $namaBulan = [
-            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
-            '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
-            '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+            '01' => 'Januari',
+            '02' => 'Februari',
+            '03' => 'Maret',
+            '04' => 'April',
+            '05' => 'Mei',
+            '06' => 'Juni',
+            '07' => 'Juli',
+            '08' => 'Agustus',
+            '09' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember'
         ];
 
         $day = date('d');
@@ -353,9 +389,18 @@ class FilledLetterController extends Controller
 
         // Tambahan untuk format tanggal yang lebih kompleks
         $namaBulanSingkat = [
-            '01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr',
-            '05' => 'Mei', '06' => 'Jun', '07' => 'Jul', '08' => 'Agu',
-            '09' => 'Sep', '10' => 'Okt', '11' => 'Nov', '12' => 'Des'
+            '01' => 'Jan',
+            '02' => 'Feb',
+            '03' => 'Mar',
+            '04' => 'Apr',
+            '05' => 'Mei',
+            '06' => 'Jun',
+            '07' => 'Jul',
+            '08' => 'Agu',
+            '09' => 'Sep',
+            '10' => 'Okt',
+            '11' => 'Nov',
+            '12' => 'Des'
         ];
         $timestampFormatted = strtotime($tglSurat);
         $dayFormatted = date('d', $timestampFormatted);
@@ -457,9 +502,18 @@ class FilledLetterController extends Controller
 
         // Ganti variabel tanggal surat
         $namaBulan = [
-            '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
-            '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
-            '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
+            '01' => 'Januari',
+            '02' => 'Februari',
+            '03' => 'Maret',
+            '04' => 'April',
+            '05' => 'Mei',
+            '06' => 'Juni',
+            '07' => 'Juli',
+            '08' => 'Agustus',
+            '09' => 'September',
+            '10' => 'Oktober',
+            '11' => 'November',
+            '12' => 'Desember'
         ];
 
         $day = date('d');
@@ -481,9 +535,18 @@ class FilledLetterController extends Controller
 
         // Format tanggal yang lebih kompleks
         $namaBulanSingkat = [
-            '01' => 'Jan', '02' => 'Feb', '03' => 'Mar', '04' => 'Apr',
-            '05' => 'Mei', '06' => 'Jun', '07' => 'Jul', '08' => 'Agu',
-            '09' => 'Sep', '10' => 'Okt', '11' => 'Nov', '12' => 'Des'
+            '01' => 'Jan',
+            '02' => 'Feb',
+            '03' => 'Mar',
+            '04' => 'Apr',
+            '05' => 'Mei',
+            '06' => 'Jun',
+            '07' => 'Jul',
+            '08' => 'Agu',
+            '09' => 'Sep',
+            '10' => 'Okt',
+            '11' => 'Nov',
+            '12' => 'Des'
         ];
         $timestampFormatted = strtotime($tglSurat);
         $dayFormatted = date('d', $timestampFormatted);
