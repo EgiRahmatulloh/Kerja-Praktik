@@ -151,9 +151,11 @@
                                     </td>
                                     <td>{{ $letter->created_at->format('d/m/Y') }}</td>
                                     <td>
-                                        <a href="{{ route('admin.filled-letters.show', $letter->id) }}" class="btn btn-sm btn-info">
-                                            <i class="bi bi-eye"></i>
+                                        @if($letter->status == 'approved' || $letter->status == 'printed')
+                                        <a href="{{ route('admin.filled-letters.docx', $letter->id) }}" class="btn btn-sm btn-primary" title="Download DOCX">
+                                            <i class="bi bi-download"></i>
                                         </a>
+                                        @endif
                                     </td>
                                 </tr>
                                 @empty
