@@ -33,8 +33,8 @@ class UpdateExpiredQueues extends Command
     {
         $this->info('Starting to update expired letter queues...');
 
-        // Ambil semua jadwal pelayanan yang aktif
-        $activeSchedules = ServiceSchedule::where('is_active', true)->get();
+        // Ambil semua jadwal pelayanan yang aktif dengan relasi user
+        $activeSchedules = ServiceSchedule::with('user')->where('is_active', true)->get();
 
         if ($activeSchedules->isEmpty()) {
             $this->error('No active service schedule found!');
@@ -43,7 +43,8 @@ class UpdateExpiredQueues extends Command
 
         // Proses setiap jadwal pelayanan yang aktif
         foreach ($activeSchedules as $serviceSchedule) {
-            $this->info('Processing schedule for user: ' . $serviceSchedule->user->name);
+            $userName = $serviceSchedule->user ? $serviceSchedule->user->name : 'Unknown User';
+            $this->info('Processing schedule for user: ' . $userName);
             
             // Ambil antrian dengan status waiting yang tanggalnya sudah lewat untuk jadwal ini
             $now = Carbon::now();

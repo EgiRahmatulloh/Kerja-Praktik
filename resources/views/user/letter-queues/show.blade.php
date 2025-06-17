@@ -78,10 +78,6 @@
                                         <th>Jadwal Proses</th>
                                         <td>{{ $queue->scheduled_date->format('d/m/Y H:i') }}</td>
                                     </tr>
-                                    <tr>
-                                        <th>Waktu Proses</th>
-                                        <td>{{ $queue->processing_time }} menit</td>
-                                    </tr>
                                     @if($queue->notes)
                                     <tr>
                                         <th>Catatan</th>

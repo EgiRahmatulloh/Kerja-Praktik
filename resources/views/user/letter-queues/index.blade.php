@@ -15,7 +15,6 @@
                                 <th>No</th>
                                 <th>Jenis Surat</th>
                                 <th>Jadwal Proses</th>
-                                <th>Waktu Proses</th>
                                 <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
@@ -26,7 +25,6 @@
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $queue->filledLetter->letterType->nama_jenis }}</td>
                                 <td>{{ $queue->scheduled_date->format('d/m/Y H:i') }}</td>
-                                <td>{{ $queue->processing_time }} menit</td>
                                 <td>
                                     @if($queue->status == 'waiting')
                                         <span class="badge bg-warning">Menunggu</span>
@@ -44,7 +42,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center">Tidak ada antrian surat</td>
+                                <td colspan="5" class="text-center">Tidak ada antrian surat</td>
                             </tr>
                             @endforelse
                         </tbody>
