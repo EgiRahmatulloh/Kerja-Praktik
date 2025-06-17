@@ -47,12 +47,11 @@
                             <th>Jenis Surat</th>
                             <th>Jadwal</th>
                             <th>Status</th>
-                            <th width="15%">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($queues as $index => $queue)
-                        <tr>
+                        <tr class="queue-row" data-queue-id="{{ $queue->id }}" style="cursor: pointer;">
                             <td>{{ $index + 1 }}</td>
                             <td>{{ $queue->filledLetter->user->name }}</td>
                             <td>{{ $queue->filledLetter->letterType->nama_jenis }}</td>
@@ -66,21 +65,69 @@
                                 <span class="badge bg-success">Selesai</span>
                                 @endif
                             </td>
-                            <td>
-                                <a href="{{ route('admin.letter-queues.show', $queue->id) }}" class="btn btn-sm btn-info">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <a href="{{ route('admin.letter-queues.edit', $queue->id) }}" class="btn btn-sm btn-warning">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a href="{{ route('admin.filled-letters.show', $queue->filledLetter->id) }}" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-file-text"></i>
-                                </a>
+
+                        </tr>
+                        <tr class="queue-details" id="details-{{ $queue->id }}" style="display: none;">
+                            <td colspan="5">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <h6 class="text-primary mb-3">Informasi Antrian</h6>
+                                                <table class="table table-sm table-borderless">
+                                                    <tr>
+                                                        <th width="40%">Pemohon:</th>
+                                                        <td>{{ $queue->filledLetter->user->name }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Jenis Surat:</th>
+                                                        <td>{{ $queue->filledLetter->letterType->nama_jenis }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <th>Jadwal:</th>
+                                                        <td>{{ $queue->scheduled_date->format('d/m/Y H:i') }}</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <h6 class="text-primary mb-3">Status & Catatan</h6>
+                                                <table class="table table-sm table-borderless">
+                                                    <tr>
+                                                        <th width="40%">Status:</th>
+                                                        <td>
+                                                            <select class="form-select form-select-sm status-select" data-queue-id="{{ $queue->id }}" data-current-status="{{ $queue->status }}" style="width: auto; display: inline-block;">
+                                                                <option value="waiting" {{ $queue->status == 'waiting' ? 'selected' : '' }}>Menunggu</option>
+                                                                <option value="processing" {{ $queue->status == 'processing' ? 'selected' : '' }}>Diproses</option>
+                                                                <option value="completed" {{ $queue->status == 'completed' ? 'selected' : '' }}>Selesai</option>
+                                                            </select>
+                                                            <span class="status-badge ms-2">
+                                                                @if($queue->status == 'waiting')
+                                                                <span class="badge bg-warning">Menunggu</span>
+                                                                @elseif($queue->status == 'processing')
+                                                                <span class="badge bg-primary">Diproses</span>
+                                                                @elseif($queue->status == 'completed')
+                                                                <span class="badge bg-success">Selesai</span>
+                                                                @endif
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                    @if($queue->notes)
+                                                    <tr>
+                                                        <th>Catatan:</th>
+                                                        <td>{{ $queue->notes }}</td>
+                                                    </tr>
+                                                    @endif
+                                                </table>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center">Tidak ada antrian surat</td>
+                            <td colspan="5" class="text-center">Tidak ada antrian surat</td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -94,3 +141,222 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<script>
+    $(document).ready(function() {
+        console.log('jQuery loaded and ready');
+        console.log('Queue rows found:', $('.queue-row').length);
+        console.log('Detail rows found:', $('.queue-details').length);
+
+        // Function untuk toggle detail row
+        function toggleQueueDetails(queueId) {
+            const detailRow = $('#details-' + queueId);
+            const queueRow = $('.queue-row[data-queue-id="' + queueId + '"]');
+
+            if (detailRow.is(':visible')) {
+                detailRow.hide();
+                queueRow.removeClass('table-active');
+            } else {
+                // Sembunyikan semua detail row lainnya
+                $('.queue-details').hide();
+                $('.queue-row').removeClass('table-active');
+
+                // Tampilkan detail row yang diklik
+                detailRow.show();
+                queueRow.addClass('table-active');
+            }
+        }
+
+        // Event handler untuk klik pada baris antrian
+        $('.queue-row').click(function(e) {
+
+            const queueId = $(this).data('queue-id');
+            console.log('Queue row clicked:', queueId);
+            toggleQueueDetails(queueId);
+        });
+
+        // Hover effect untuk menunjukkan bahwa baris bisa diklik
+        $('.queue-row').hover(
+            function() {
+                $(this).addClass('table-hover-custom');
+            },
+            function() {
+                $(this).removeClass('table-hover-custom');
+            }
+        );
+
+        // Hover effect untuk setiap cell
+        $('.queue-row td').hover(
+            function() {
+                // Jangan tambahkan hover jika ada tombol aksi
+                if ($(this).find('a').length === 0) {
+                    $(this).closest('.queue-row').addClass('table-hover-custom');
+                }
+            },
+            function() {
+                $(this).closest('.queue-row').removeClass('table-hover-custom');
+            }
+        );
+
+        // Handle perubahan status dropdown
+        $('.status-select').change(function(e) {
+            e.stopPropagation(); // Mencegah trigger dropdown detail
+
+            const queueId = $(this).data('queue-id');
+            const newStatus = $(this).val();
+            const currentStatus = $(this).data('current-status');
+            const statusBadge = $(this).siblings('.status-badge');
+
+            console.log('Status change:', queueId, 'from', currentStatus, 'to', newStatus);
+
+            // Jika status tidak berubah, tidak perlu update
+            if (newStatus === currentStatus) {
+                return;
+            }
+
+            // Konfirmasi perubahan status
+            if (!confirm('Apakah Anda yakin ingin mengubah status antrian ini?')) {
+                $(this).val(currentStatus); // Reset ke status sebelumnya
+                return;
+            }
+
+            // Validasi catatan untuk status completed
+            let notes = '';
+            if (newStatus === 'completed') {
+                notes = prompt('Masukkan catatan (opsional):');
+                if (notes === null) { // User cancelled
+                    $(this).val(currentStatus); // Reset ke status sebelumnya
+                    return;
+                }
+            }
+
+            // Disable dropdown sementara
+            $(this).prop('disabled', true);
+
+            // Kirim AJAX request
+            $.ajax({
+                url: '{{ route("admin.letter-queues.update-status", ":id") }}'.replace(':id', queueId),
+                method: 'PUT',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    status: newStatus,
+                    notes: notes
+                },
+                success: function(response) {
+                    console.log('Status updated successfully');
+
+                    // Update badge status
+                    let badgeClass = '';
+                    let badgeText = '';
+
+                    switch (newStatus) {
+                        case 'waiting':
+                            badgeClass = 'bg-warning';
+                            badgeText = 'Menunggu';
+                            break;
+                        case 'processing':
+                            badgeClass = 'bg-primary';
+                            badgeText = 'Diproses';
+                            break;
+                        case 'completed':
+                            badgeClass = 'bg-success';
+                            badgeText = 'Selesai';
+                            break;
+                    }
+
+                    statusBadge.html('<span class="badge ' + badgeClass + '">' + badgeText + '</span>');
+
+                    // Update badge di baris utama juga
+                    $('.queue-row[data-queue-id="' + queueId + '"] td:nth-child(5)').html('<span class="badge ' + badgeClass + '">' + badgeText + '</span>');
+
+                    // Update data-current-status
+                    $('.status-select[data-queue-id="' + queueId + '"]').data('current-status', newStatus);
+
+                    // Show success message
+                    alert('Status antrian berhasil diperbarui!');
+                },
+                error: function(xhr) {
+                    console.error('Error updating status:', xhr);
+
+                    // Reset dropdown ke status sebelumnya
+                    $('.status-select[data-queue-id="' + queueId + '"]').val(currentStatus);
+
+                    // Show error message
+                    let errorMessage = 'Gagal mengubah status antrian.';
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        errorMessage += '\n' + Object.values(xhr.responseJSON.errors).join('\n');
+                    }
+                    alert(errorMessage);
+                },
+                complete: function() {
+                    // Re-enable dropdown
+                    $('.status-select[data-queue-id="' + queueId + '"]').prop('disabled', false);
+                }
+            });
+        });
+
+        // Mencegah dropdown status memicu toggle detail saat diklik
+        $('.status-select').click(function(e) {
+            e.stopPropagation();
+        });
+    });
+</script>
+
+<style>
+    .table-hover-custom {
+        background-color: #f8f9fa !important;
+    }
+
+    .queue-row:hover {
+        background-color: #e9ecef !important;
+    }
+
+    .queue-row.table-active {
+        background-color: #cfe2ff !important;
+    }
+
+    .queue-row td {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        position: relative;
+    }
+
+    .queue-row td:hover {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+    }
+
+
+
+    .queue-details .card {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+    }
+
+    .queue-details .card-body {
+        padding: 1.5rem;
+    }
+
+    .queue-row {
+        transition: background-color 0.2s ease;
+    }
+
+    /* Tambahan visual indicator */
+    .queue-row td::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: transparent;
+        transition: background-color 0.2s ease;
+        pointer-events: none;
+    }
+
+    .queue-row:hover td::before {
+        background-color: rgba(13, 110, 253, 0.05);
+    }
+</style>
+@endpush

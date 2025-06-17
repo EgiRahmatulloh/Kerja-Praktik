@@ -122,28 +122,55 @@ class LetterQueueController extends Controller
      */
     public function updateStatus(Request $request, $id)
     {
-        $request->validate([
-            'status' => 'required|in:waiting,processing,completed',
-            'notes' => 'nullable|string',
-        ]);
+        try {
+            $request->validate([
+                'status' => 'required|in:waiting,processing,completed',
+                'notes' => 'nullable|string',
+            ]);
 
-        $queue = LetterQueue::findOrFail($id);
-        $oldStatus = $queue->status;
-        $newStatus = $request->status;
+            $queue = LetterQueue::findOrFail($id);
+            $oldStatus = $queue->status;
+            $newStatus = $request->status;
 
-        // Update status antrian saat ini
-        $queue->update([
-            'status' => $newStatus,
-            'notes' => $request->notes,
-        ]);
+            // Update status antrian saat ini
+            $queue->update([
+                'status' => $newStatus,
+                'notes' => $request->notes,
+            ]);
 
-        // Jika status diubah menjadi completed, atur antrian berikutnya
-        if ($oldStatus != 'completed' && $newStatus == 'completed') {
-            $this->advanceNextQueue($queue);
+            // Jika status diubah menjadi completed, atur antrian berikutnya
+            if ($oldStatus != 'completed' && $newStatus == 'completed') {
+                $this->advanceNextQueue($queue);
+            }
+
+            // Cek apakah request adalah AJAX
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Status antrian surat berhasil diperbarui.',
+                    'new_status' => $queue->status,
+                    'notes' => $queue->notes
+                ]);
+            }
+
+            return redirect()->route('admin.letter-queues.show', $queue->id)
+                ->with('success', 'Status antrian surat berhasil diperbarui');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Error updating queue status:', [
+                'queue_id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat memperbarui status: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return redirect()->route('admin.letter-queues.show', $queue->id)
+                ->with('error', 'Terjadi kesalahan saat memperbarui status.');
         }
-
-        return redirect()->route('admin.letter-queues.show', $queue->id)
-            ->with('success', 'Status antrian surat berhasil diperbarui');
     }
 
     /**
