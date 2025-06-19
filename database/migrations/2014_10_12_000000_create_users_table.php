@@ -22,6 +22,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('role', 20)->default('user'); // 'admin' atau 'user'
+            $table->string('sub_role')->nullable(); // Field yang ditambahkan dari migrasi add_sub_role_to_users_table
             $table->rememberToken();
             $table->timestamps();
         });

@@ -16,6 +16,11 @@ return new class extends Migration
         Schema::create('letter_queues', function (Blueprint $table) {
             $table->id();
             $table->foreignId('filled_letter_id')->constrained()->onDelete('cascade');
+            
+            // Field yang ditambahkan dari migrasi add_service_schedule_id_to_letter_queues_table
+            $table->unsignedBigInteger('service_schedule_id')->nullable();
+            $table->foreign('service_schedule_id')->references('id')->on('service_schedules')->onDelete('set null');
+            
             $table->dateTime('scheduled_date')->nullable(); // Jadwal antrian
             $table->integer('processing_time')->nullable(); // Lama proses dalam menit
             $table->enum('status', ['waiting', 'processing', 'completed'])->default('waiting');

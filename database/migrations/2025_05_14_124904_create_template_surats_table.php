@@ -24,6 +24,13 @@ return new class extends Migration
             
             // Baris enum 'kategori_surat' sudah DIHAPUS dari sini.
             
+            // Field yang ditambahkan dari migrasi add_last_number_field_to_template_surats_table
+            $table->integer('last_number')->default(0);
+            
+            // Field yang ditambahkan dari migrasi add_share_settings_to_template_surats_table
+            $table->string('share_setting')->default('private'); // 'public', 'limited', 'private'
+            $table->foreignId('owner_id')->nullable()->constrained('users')->onDelete('set null');
+            
             $table->timestamps();
         });
     }
