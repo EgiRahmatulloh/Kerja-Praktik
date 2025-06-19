@@ -24,6 +24,9 @@ return new class extends Migration
             
             // Baris enum 'kategori_surat' sudah DIHAPUS dari sini.
             
+            $table->integer('last_number')->default(0);
+            $table->string('share_setting')->default('private'); // 'public', 'limited', 'private'
+            $table->foreignId('owner_id')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamps();
         });
     }
