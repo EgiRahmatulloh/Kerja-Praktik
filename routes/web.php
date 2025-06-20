@@ -55,7 +55,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('templates/{template}/edit', [TemplateSuratController::class, 'edit'])->name('templates.edit');
     Route::put('templates/{template}', [TemplateSuratController::class, 'update'])->name('templates.update');
     Route::delete('templates/{template}', [TemplateSuratController::class, 'destroy'])->name('templates.destroy');
-    Route::get('templates/{id}/pdf', [TemplateSuratController::class, 'generatePdf'])->name('templates.pdf');
+    Route::get('templates/{template}/download', [TemplateSuratController::class, 'download'])->name('templates.download');
 
 
 

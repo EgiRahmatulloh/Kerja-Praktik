@@ -188,6 +188,48 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Konfirmasi Perubahan Status -->
+<div class="modal fade" id="confirmStatusModal" tabindex="-1" aria-labelledby="confirmStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmStatusModalLabel">Konfirmasi Perubahan Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Apakah Anda yakin ingin mengubah status surat ini?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="confirmStatusBtn">Ya, Ubah</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Catatan Admin -->
+<div class="modal fade" id="adminNoteModal" tabindex="-1" aria-labelledby="adminNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="adminNoteModalLabel">Catatan Admin</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="catatanAdminInput" class="form-label">Masukkan catatan admin (wajib untuk status ditolak):</label>
+                    <textarea class="form-control" id="catatanAdminInput" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="submitAdminNoteBtn">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -274,13 +316,16 @@
         );
 
         // Handle perubahan status dropdown
+        let currentStatusSelect; // Variabel untuk menyimpan elemen select yang sedang aktif
+        let statusChangeConfirmed = false; // Flag untuk menandai apakah perubahan status sudah dikonfirmasi
+
         $('.status-select').change(function(e) {
             e.stopPropagation(); // Mencegah trigger dropdown detail
 
-            const letterId = $(this).data('letter-id');
-            const newStatus = $(this).val();
-            const currentStatus = $(this).data('current-status');
-            const statusBadge = $(this).siblings('.status-badge');
+            currentStatusSelect = $(this); // Simpan elemen select yang sedang diubah
+            const letterId = currentStatusSelect.data('letter-id');
+            const newStatus = currentStatusSelect.val();
+            const currentStatus = currentStatusSelect.data('current-status');
 
             console.log('Status change:', letterId, 'from', currentStatus, 'to', newStatus);
 
@@ -289,25 +334,71 @@
                 return;
             }
 
-            // Konfirmasi perubahan status
-            if (!confirm('Apakah Anda yakin ingin mengubah status surat ini?')) {
-                $(this).val(currentStatus); // Reset ke status sebelumnya
+            // Reset flag konfirmasi
+            statusChangeConfirmed = false;
+            
+            // Tampilkan modal konfirmasi
+            $('#confirmStatusModal').modal('show');
+        });
+
+        // Handle klik tombol 'Ya, Ubah' di modal konfirmasi
+        $('#confirmStatusBtn').click(function() {
+            statusChangeConfirmed = true; // Set flag bahwa perubahan sudah dikonfirmasi
+            $('#confirmStatusModal').modal('hide'); // Sembunyikan modal konfirmasi
+
+            const letterId = currentStatusSelect.data('letter-id');
+            const newStatus = currentStatusSelect.val();
+            const currentStatus = currentStatusSelect.data('current-status');
+
+            // Validasi catatan admin untuk status rejected
+            if (newStatus === 'rejected') {
+                $('#catatanAdminInput').val(''); // Kosongkan input catatan admin
+                $('#adminNoteModal').modal('show'); // Tampilkan modal catatan admin
+            } else {
+                // Jika bukan rejected, langsung kirim AJAX request
+                updateLetterStatus(letterId, newStatus, currentStatus, '');
+            }
+        });
+
+        // Handle klik tombol 'Simpan' di modal catatan admin
+        $('#submitAdminNoteBtn').click(function() {
+            const catatanAdmin = $('#catatanAdminInput').val();
+            if (!catatanAdmin || catatanAdmin.trim() === '') {
+                alert('Catatan admin wajib diisi untuk status ditolak!');
                 return;
             }
 
-            // Validasi catatan admin untuk status rejected
-            let catatanAdmin = '';
-            if (newStatus === 'rejected') {
-                catatanAdmin = prompt('Masukkan catatan admin (wajib untuk status ditolak):');
-                if (!catatanAdmin || catatanAdmin.trim() === '') {
-                    alert('Catatan admin wajib diisi untuk status ditolak!');
-                    $(this).val(currentStatus); // Reset ke status sebelumnya
-                    return;
-                }
+            statusChangeConfirmed = true; // Set flag bahwa perubahan sudah dikonfirmasi
+            $('#adminNoteModal').modal('hide'); // Sembunyikan modal catatan admin
+
+            const letterId = currentStatusSelect.data('letter-id');
+            const newStatus = currentStatusSelect.val();
+            const currentStatus = currentStatusSelect.data('current-status');
+
+            updateLetterStatus(letterId, newStatus, currentStatus, catatanAdmin);
+        });
+
+        // Handle tombol 'Batal' di modal konfirmasi dan catatan admin
+        $('#confirmStatusModal').on('hidden.bs.modal', function () {
+            if (currentStatusSelect && !statusChangeConfirmed) {
+                const currentStatus = currentStatusSelect.data('current-status');
+                currentStatusSelect.val(currentStatus); // Reset ke status sebelumnya jika dibatalkan
             }
+        });
+
+        $('#adminNoteModal').on('hidden.bs.modal', function () {
+            if (currentStatusSelect && !statusChangeConfirmed) {
+                const currentStatus = currentStatusSelect.data('current-status');
+                currentStatusSelect.val(currentStatus); // Reset ke status sebelumnya jika dibatalkan
+            }
+        });
+
+        // Fungsi untuk mengirim AJAX request update status
+        function updateLetterStatus(letterId, newStatus, currentStatus, catatanAdmin) {
+            const statusBadge = currentStatusSelect.siblings('.status-badge');
 
             // Disable dropdown sementara
-            $(this).prop('disabled', true);
+            currentStatusSelect.prop('disabled', true);
 
             // Kirim AJAX request
             $.ajax({
@@ -344,10 +435,45 @@
                             break;
                     }
 
+                    // Update badge di detail (status-badge)
                     statusBadge.html('<span class="badge ' + badgeClass + '">' + badgeText + '</span>');
 
-                    // Update data-current-status
+                    // Update badge status di tabel utama
+                    const mainTableRow = $('.letter-row[data-letter-id="' + letterId + '"]');
+                    const mainStatusCell = mainTableRow.find('td:nth-child(5)'); // Kolom status adalah kolom ke-5
+                    mainStatusCell.html('<span class="badge ' + badgeClass + '">' + badgeText + '</span>');
+
+                    // Update tombol download DOCX di kolom aksi (kolom ke-7)
+                    const actionCell = mainTableRow.find('td:nth-child(7)');
+                    if (newStatus === 'approved' || newStatus === 'printed') {
+                        // Tampilkan tombol download jika status approved atau printed
+                        const downloadUrl = '{{ route("admin.filled-letters.docx", ":id") }}'.replace(':id', letterId);
+                        actionCell.html('<a href="' + downloadUrl + '" class="btn btn-sm btn-primary" title="Download DOCX" onclick="event.stopPropagation();"><i class="bi bi-download"></i></a>');
+                    } else {
+                        // Sembunyikan tombol download untuk status lainnya
+                        actionCell.html('');
+                    }
+
+                    // Update tombol download di bagian detail informasi pemohon
+                    const detailsRow = $('#details-' + letterId);
+                    const downloadButtonContainer = detailsRow.find('.col-12.text-end');
+                    if (newStatus === 'approved' || newStatus === 'printed') {
+                        // Tampilkan tombol download di detail
+                        const downloadUrl = '{{ route("admin.filled-letters.docx", ":id") }}'.replace(':id', letterId);
+                        downloadButtonContainer.html('<a href="' + downloadUrl + '" class="btn btn-sm btn-primary"><i class="bi bi-download"></i> Download</a>');
+                    } else {
+                        // Sembunyikan tombol download di detail
+                        downloadButtonContainer.html('');
+                    }
+
+                    // Update data-current-status untuk semua dropdown dengan letter-id yang sama
                     $('.status-select[data-letter-id="' + letterId + '"]').data('current-status', newStatus);
+                    
+                    // Update semua dropdown dengan letter-id yang sama ke status baru
+                    $('.status-select[data-letter-id="' + letterId + '"]').val(newStatus);
+
+                    // Reset flag konfirmasi setelah berhasil update
+                    statusChangeConfirmed = false;
 
                     // Show success message
                     alert('Status surat berhasil diperbarui!');
@@ -358,6 +484,9 @@
                     // Reset dropdown ke status sebelumnya
                     $('.status-select[data-letter-id="' + letterId + '"]').val(currentStatus);
 
+                    // Reset flag konfirmasi setelah error
+                    statusChangeConfirmed = false;
+
                     // Show error message
                     let errorMessage = 'Gagal mengubah status surat.';
                     if (xhr.responseJSON && xhr.responseJSON.errors) {
@@ -367,10 +496,10 @@
                 },
                 complete: function() {
                     // Re-enable dropdown
-                    $('.status-select[data-letter-id="' + letterId + '"]').prop('disabled', false);
+                    currentStatusSelect.prop('disabled', false);
                 }
             });
-        });
+        }
 
         // Mencegah dropdown status memicu toggle detail saat diklik
         $('.status-select').click(function(e) {

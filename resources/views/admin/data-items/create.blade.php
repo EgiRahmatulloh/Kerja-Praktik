@@ -54,6 +54,7 @@
                             <select class="form-select @error('tipe_input') is-invalid @enderror" id="input_type" name="tipe_input" required>
                                 <option value="">Pilih Tipe Input</option>
                                 <option value="text" {{ old('input_type') == 'text' ? 'selected' : '' }}>Text</option>
+                                <option value="number" {{ old('input_type') == 'number' ? 'selected' : '' }}>Number</option>
                                 <option value="textarea" {{ old('input_type') == 'textarea' ? 'selected' : '' }}>Textarea</option>
                                 <option value="date" {{ old('input_type') == 'date' ? 'selected' : '' }}>Date</option>
                                 <option value="select" {{ old('input_type') == 'select' ? 'selected' : '' }}>Select</option>

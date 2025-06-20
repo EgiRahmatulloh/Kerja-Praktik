@@ -196,15 +196,21 @@ class TemplateSuratController extends Controller
             ->with('success', 'Template surat berhasil dihapus.');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Metode generatePdf() Dihapus
-    |--------------------------------------------------------------------------
-    |
-    | Metode ini tidak lagi relevan karena:
-    | 1. Sistem sekarang menggunakan template .docx, bukan HTML untuk PDF.
-    | 2. Tugas controller ini adalah MENGELOLA template (CRUD), bukan MENGGUNAKANNYA
-    |    untuk membuat dokumen. Proses pembuatan dokumen ada di controller lain.
-    |
-    */
+    /**
+     * Mengunduh file template surat.
+     *
+     * @param  \App\Models\TemplateSurat  $template
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
+     */
+    public function download(TemplateSurat $template)
+    {
+        // Pastikan file ada sebelum mencoba mengunduh
+        if (!Storage::disk('public')->exists($template->template_path)) {
+            abort(404, 'File template tidak ditemukan.');
+        }
+
+        // Menggunakan Storage::download untuk mengunduh file
+        // Nama file akan diambil dari path, atau Anda bisa menyesuaikannya
+        return Storage::disk('public')->download($template->template_path, basename($template->template_path));
+    }
 }

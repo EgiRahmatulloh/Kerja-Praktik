@@ -26,7 +26,7 @@ class DataItemSeeder extends Seeder
         \App\Models\DataItem::create([
             'key' => 'nim',
             'label' => 'NIM Mahasiswa',
-            'tipe_input' => 'text'
+            'tipe_input' => 'number'
         ]);
 
         \App\Models\DataItem::create([

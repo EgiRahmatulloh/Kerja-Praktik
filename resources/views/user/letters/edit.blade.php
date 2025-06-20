@@ -41,6 +41,11 @@
                                     id="{{ $item->key }}" name="{{ $item->key }}"
                                     value="{{ old($item->key, $letter->filled_data[$item->key] ?? '') }}"
                                     {{ $item->required ? 'required' : '' }}>
+                                @elseif($item->tipe_input == 'number')
+                                <input type="number" class="form-control @error($item->key) is-invalid @enderror"
+                                    id="{{ $item->key }}" name="{{ $item->key }}"
+                                    value="{{ old($item->key, $letter->filled_data[$item->key] ?? '') }}"
+                                    {{ $item->required ? 'required' : '' }}>
                                 @elseif($item->tipe_input == 'date')
                                 <input type="date" class="form-control @error($item->key) is-invalid @enderror"
                                     id="{{ $item->key }}" name="{{ $item->key }}"
@@ -100,8 +105,8 @@
         textInputs.forEach(function(input) {
             input.addEventListener('blur', function() {
                 if (this.value.length > 0) {
-                    // Mengubah karakter pertama menjadi huruf kapital
-                    this.value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+                    // Mengubah setiap kata menjadi huruf kapital
+                    this.value = this.value.replace(/\b\w/g, char => char.toUpperCase());
                 }
             });
         });

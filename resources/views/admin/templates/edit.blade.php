@@ -23,7 +23,7 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                         @if ($template->template_path)
-                            <small class="form-text text-muted">File saat ini: <a href="{{ $template->public_url }}" target="_blank">{{ basename($template->template_path) }}</a></small>
+                            <small class="form-text text-muted">File saat ini: <a href="{{ route('admin.templates.download', $template->id) }}">{{ basename($template->template_path) }}</a></small>
                         @endif
                     </div>
                     <div class="form-check mb-3">

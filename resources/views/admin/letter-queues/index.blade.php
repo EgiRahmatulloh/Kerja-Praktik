@@ -140,6 +140,48 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Konfirmasi Perubahan Status Antrian -->
+<div class="modal fade" id="confirmQueueStatusModal" tabindex="-1" aria-labelledby="confirmQueueStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmQueueStatusModalLabel">Konfirmasi Perubahan Status Antrian</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Apakah Anda yakin ingin mengubah status antrian ini?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="confirmQueueStatusBtn">Ya, Ubah</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Catatan Antrian (Opsional) -->
+<div class="modal fade" id="queueNoteModal" tabindex="-1" aria-labelledby="queueNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="queueNoteModalLabel">Catatan Antrian</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="queueNoteInput" class="form-label">Masukkan catatan (opsional):</label>
+                    <textarea class="form-control" id="queueNoteInput" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="submitQueueNoteBtn">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -201,13 +243,16 @@
         );
 
         // Handle perubahan status dropdown
+        let currentQueueStatusSelect; // Variabel untuk menyimpan elemen select yang sedang aktif
+        let queueStatusChangeConfirmed = false; // Flag untuk menandai apakah perubahan status sudah dikonfirmasi
+
         $('.status-select').change(function(e) {
             e.stopPropagation(); // Mencegah trigger dropdown detail
 
-            const queueId = $(this).data('queue-id');
-            const newStatus = $(this).val();
-            const currentStatus = $(this).data('current-status');
-            const statusBadge = $(this).siblings('.status-badge');
+            currentQueueStatusSelect = $(this); // Simpan elemen select yang sedang diubah
+            const queueId = currentQueueStatusSelect.data('queue-id');
+            const newStatus = currentQueueStatusSelect.val();
+            const currentStatus = currentQueueStatusSelect.data('current-status');
 
             console.log('Status change:', queueId, 'from', currentStatus, 'to', newStatus);
 
@@ -216,24 +261,68 @@
                 return;
             }
 
-            // Konfirmasi perubahan status
-            if (!confirm('Apakah Anda yakin ingin mengubah status antrian ini?')) {
-                $(this).val(currentStatus); // Reset ke status sebelumnya
-                return;
-            }
+            // Reset flag konfirmasi
+            queueStatusChangeConfirmed = false;
+            
+            // Tampilkan modal konfirmasi
+            $('#confirmQueueStatusModal').modal('show');
+        });
+
+        // Handle klik tombol 'Ya, Ubah' di modal konfirmasi
+        $('#confirmQueueStatusBtn').click(function() {
+            queueStatusChangeConfirmed = true; // Set flag bahwa perubahan sudah dikonfirmasi
+            $('#confirmQueueStatusModal').modal('hide'); // Sembunyikan modal konfirmasi
+
+            const queueId = currentQueueStatusSelect.data('queue-id');
+            const newStatus = currentQueueStatusSelect.val();
+            const currentStatus = currentQueueStatusSelect.data('current-status');
 
             // Validasi catatan untuk status completed
-            let notes = '';
             if (newStatus === 'completed') {
-                notes = prompt('Masukkan catatan (opsional):');
-                if (notes === null) { // User cancelled
-                    $(this).val(currentStatus); // Reset ke status sebelumnya
-                    return;
-                }
+                $('#queueNoteInput').val(''); // Kosongkan input catatan
+                $('#queueNoteModal').modal('show'); // Tampilkan modal catatan
+            } else {
+                // Jika bukan completed, langsung kirim AJAX request
+                updateQueueStatus(queueId, newStatus, currentStatus, '');
             }
+        });
+
+        // Handle klik tombol 'Simpan' di modal catatan antrian
+        $('#submitQueueNoteBtn').click(function() {
+            const notes = $('#queueNoteInput').val();
+            // Catatan opsional, jadi tidak perlu validasi wajib isi
+
+            queueStatusChangeConfirmed = true; // Set flag bahwa perubahan sudah dikonfirmasi
+            $('#queueNoteModal').modal('hide'); // Sembunyikan modal catatan
+
+            const queueId = currentQueueStatusSelect.data('queue-id');
+            const newStatus = currentQueueStatusSelect.val();
+            const currentStatus = currentQueueStatusSelect.data('current-status');
+
+            updateQueueStatus(queueId, newStatus, currentStatus, notes);
+        });
+
+        // Handle tombol 'Batal' di modal konfirmasi dan catatan antrian
+        $('#confirmQueueStatusModal').on('hidden.bs.modal', function () {
+            if (currentQueueStatusSelect && !queueStatusChangeConfirmed) {
+                const currentStatus = currentQueueStatusSelect.data('current-status');
+                currentQueueStatusSelect.val(currentStatus); // Reset ke status sebelumnya jika dibatalkan
+            }
+        });
+
+        $('#queueNoteModal').on('hidden.bs.modal', function () {
+            if (currentQueueStatusSelect && !queueStatusChangeConfirmed) {
+                const currentStatus = currentQueueStatusSelect.data('current-status');
+                currentQueueStatusSelect.val(currentStatus); // Reset ke status sebelumnya jika dibatalkan
+            }
+        });
+
+        // Fungsi untuk mengirim AJAX request update status
+        function updateQueueStatus(queueId, newStatus, currentStatus, notes) {
+            const statusBadge = currentQueueStatusSelect.siblings('.status-badge');
 
             // Disable dropdown sementara
-            $(this).prop('disabled', true);
+            currentQueueStatusSelect.prop('disabled', true);
 
             // Kirim AJAX request
             $.ajax({
@@ -274,6 +363,9 @@
                     // Update data-current-status
                     $('.status-select[data-queue-id="' + queueId + '"]').data('current-status', newStatus);
 
+                    // Reset flag konfirmasi setelah berhasil update
+                    queueStatusChangeConfirmed = false;
+
                     // Show success message
                     alert('Status antrian berhasil diperbarui!');
                 },
@@ -282,6 +374,9 @@
 
                     // Reset dropdown ke status sebelumnya
                     $('.status-select[data-queue-id="' + queueId + '"]').val(currentStatus);
+
+                    // Reset flag konfirmasi setelah error
+                    queueStatusChangeConfirmed = false;
 
                     // Show error message
                     let errorMessage = 'Gagal mengubah status antrian.';
@@ -292,10 +387,10 @@
                 },
                 complete: function() {
                     // Re-enable dropdown
-                    $('.status-select[data-queue-id="' + queueId + '"]').prop('disabled', false);
+                    currentQueueStatusSelect.prop('disabled', false);
                 }
             });
-        });
+        }
 
         // Mencegah dropdown status memicu toggle detail saat diklik
         $('.status-select').click(function(e) {

@@ -25,8 +25,16 @@ class DatabaseSeeder extends Seeder
         // Membuat user biasa
         User::create([
             'name' => 'User Biasa',
-            'username' => 'user',
-            'email' => 'user@example.com',
+            'username' => 'user1',
+            'email' => 'user1@example.com',
+            'password' => bcrypt('user'),
+            'role' => 'user'
+        ]);
+
+        User::create([
+            'name' => 'User Biasa',
+            'username' => 'user2',
+            'email' => 'user2@example.com',
             'password' => bcrypt('user'),
             'role' => 'user'
         ]);

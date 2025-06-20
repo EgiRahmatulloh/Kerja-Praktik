@@ -23,7 +23,7 @@
                 <div class="mb-3">
                     <label class="form-label">File Template:</label>
                     @if ($template->template_path)
-                        <p><a href="{{ $template->public_url }}" target="_blank" class="btn btn-sm btn-primary">Download File</a></p>
+                        <p><a href="{{ route('admin.templates.download', $template->id) }}" class="btn btn-sm btn-primary">Download File</a></p>
                         <small class="form-text text-muted">Nama file: {{ basename($template->template_path) }}</small>
                     @else
                         <p>Tidak ada file template.</p>

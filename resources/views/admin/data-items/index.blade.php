@@ -89,17 +89,17 @@
                             <tr>
                                 <td><code>${noSurat}</code><br><code>${data.noSurat}</code></td>
                                 <td>Nomor surat yang diset admin</td>
-                                <td>001/KEL/2024</td>
+                                <td>001</td>
                             </tr>
                             <tr>
                                 <td><code>${tglSurat}</code><br><code>${data.tglSurat}</code></td>
                                 <td>Tanggal surat (format: YYYY-MM-DD)</td>
-                                <td>2024-01-15</td>
+                                <td>2025-01-15</td>
                             </tr>
                             <tr>
                                 <td><code>${formattedDate}</code><br><code>${data.formattedDate}</code></td>
                                 <td>Tanggal terformat (dd MMM yyyy)</td>
-                                <td>15 Jan 2024</td>
+                                <td>15 Jan 2025</td>
                             </tr>
                             <tr>
                                 <td><code>${bulan}</code><br><code>${data.bulan}</code></td>
@@ -114,7 +114,7 @@
                             <tr>
                                 <td><code>${tahun}</code><br><code>${data.tahun}</code></td>
                                 <td>Tahun saat ini</td>
-                                <td>2024</td>
+                                <td>2025</td>
                             </tr>
                         </tbody>
                     </table>

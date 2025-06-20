@@ -55,6 +55,7 @@
                             <select class="form-select @error('tipe_input') is-invalid @enderror" id="tipe_input" name="tipe_input" required>
                                 <option value="">Pilih Tipe Input</option>
                                 <option value="text" {{ old('tipe_input', $dataItem->tipe_input) == 'text' ? 'selected' : '' }}>Text</option>
+                                <option value="number" {{ old('tipe_input', $dataItem->tipe_input) == 'number' ? 'selected' : '' }}>Number</option>
                                 <option value="textarea" {{ old('tipe_input', $dataItem->tipe_input) == 'textarea' ? 'selected' : '' }}>Textarea</option>
                                 <option value="date" {{ old('tipe_input', $dataItem->tipe_input) == 'date' ? 'selected' : '' }}>Date</option>
                                 <option value="select" {{ old('tipe_input', $dataItem->tipe_input) == 'select' ? 'selected' : '' }}>Select</option>
