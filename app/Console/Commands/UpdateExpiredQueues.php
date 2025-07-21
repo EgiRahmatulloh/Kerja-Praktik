@@ -33,176 +33,101 @@ class UpdateExpiredQueues extends Command
     {
         $this->info('Starting to update expired letter queues...');
 
-        // Ambil semua jadwal pelayanan yang aktif dengan relasi user
-        $activeSchedules = ServiceSchedule::with('user')->where('is_active', true)->get();
+        $now = Carbon::now();
+        $expiredQueues = LetterQueue::where('status', 'waiting')
+            ->where('scheduled_date', '<', $now)
+            ->orderBy('id', 'asc')
+            ->get();
 
-        if ($activeSchedules->isEmpty()) {
-            $this->error('No active service schedule found!');
-            return 1;
+        if ($expiredQueues->isEmpty()) {
+            $this->info('No expired queues found.');
+            return 0;
         }
 
-        // Proses setiap jadwal pelayanan yang aktif
-        foreach ($activeSchedules as $serviceSchedule) {
-            $userName = $serviceSchedule->user ? $serviceSchedule->user->name : 'Unknown User';
-            $this->info('Processing schedule for user: ' . $userName);
-            
-            // Ambil antrian dengan status waiting yang tanggalnya sudah lewat untuk jadwal ini
-            $now = Carbon::now();
-            $expiredQueues = LetterQueue::where('status', 'waiting')
-                ->where('service_schedule_id', $serviceSchedule->id)
-                ->where('scheduled_date', '<', $now)
-                ->orderBy('id', 'asc')
-                ->get();
+        // Kelompokkan antrian berdasarkan jadwal layanan
+        $groupedQueues = $expiredQueues->groupBy('service_schedule_id');
 
-            if ($expiredQueues->isEmpty()) {
-                $this->info('No expired queues found for this schedule.');
+        foreach ($groupedQueues as $serviceScheduleId => $queues) {
+            $serviceSchedule = ServiceSchedule::find($serviceScheduleId);
+            if (!$serviceSchedule || !$serviceSchedule->is_active) {
+                $this->warn("Service schedule #{$serviceScheduleId} is not active or not found, skipping.");
                 continue;
             }
 
-            $this->processExpiredQueuesForSchedule($serviceSchedule, $expiredQueues);
-        }
-
-        return 0;
-    }
-
-    private function processExpiredQueuesForSchedule($serviceSchedule, $expiredQueues)
-    {
-
-        // Hapus antrian duplikat berdasarkan filled_letter_id
-        $uniqueQueues = collect();
-        $seenLetterIds = [];
-
-        foreach ($expiredQueues as $queue) {
-            if (!in_array($queue->filled_letter_id, $seenLetterIds)) {
-                $uniqueQueues->push($queue);
-                $seenLetterIds[] = $queue->filled_letter_id;
-            }
-        }
-
-        $expiredQueues = $uniqueQueues;
-
-        if ($expiredQueues->isEmpty()) {
-            $this->info('No expired queues found for this schedule.');
-            return;
-        }
-
-        $this->info('Found ' . $expiredQueues->count() . ' expired queues for this schedule.');
-
-        // Tentukan tanggal layanan berikutnya (hari ini atau besok)
-        $nextServiceDate = $this->getNextServiceDate($serviceSchedule);
-
-        // Hapus antrian duplikat dari database untuk jadwal ini
-        $this->cleanupDuplicateQueues($serviceSchedule->id);
-
-        // Proses setiap antrian yang sudah lewat
-        $scheduledTime = Carbon::parse($nextServiceDate);
-
-        foreach ($expiredQueues as $queue) {
-            // Pastikan masih dalam jam pelayanan
-            $scheduleDate = $scheduledTime->format('Y-m-d');
-            $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($scheduleDate);
-            $endTime = Carbon::parse($serviceSchedule->end_time)->setDateFrom($scheduleDate);
-
-            // Jika jadwal melebihi jam selesai pelayanan, pindahkan ke hari kerja berikutnya
-            if ($scheduledTime->gt($endTime)) {
-                $holidayService = new HolidayService();
-                $nextWorkingDay = $holidayService->getNextWorkingDay(Carbon::parse($scheduleDate));
-                $scheduledTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
-            }
-            
-            // Pastikan tanggal yang dijadwalkan bukan hari libur
-            $holidayService = new HolidayService();
-            if ($holidayService->isHoliday($scheduledTime)) {
-                $nextWorkingDay = $holidayService->getNextWorkingDay($scheduledTime);
-                $scheduledTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($nextWorkingDay);
-            }
-
-            // Hitung waktu jadwal baru berdasarkan urutan
-            $processingTime = $serviceSchedule->processing_time;
-
-            // Update jadwal antrian
-            $queue->update([
-                'scheduled_date' => $scheduledTime,
-            ]);
-
-            $this->info("Updated queue #{$queue->id} to {$scheduledTime}");
-
-            // Siapkan jadwal untuk antrian berikutnya
-            $scheduledTime = $scheduledTime->copy()->addMinutes($processingTime);
+            $this->info("Processing schedule for user: {$serviceSchedule->user->name}");
+            $this->processExpiredQueuesForSchedule($serviceSchedule, $queues);
         }
 
         $this->info('All expired queues have been updated successfully.');
         return 0;
     }
 
-    /**
-     * Mendapatkan tanggal layanan berikutnya berdasarkan jadwal pelayanan
-     */
-    private function getNextServiceDate($serviceSchedule)
+    private function processExpiredQueuesForSchedule($serviceSchedule, $expiredQueues)
     {
-        $now = Carbon::now();
-        $today = $now->format('Y-m-d');
+        $uniqueQueues = $expiredQueues->unique('filled_letter_id')->values();
 
-        // Jam mulai dan selesai pelayanan hari ini
-        $startTime = Carbon::parse($serviceSchedule->start_time)->setDateFrom($today);
-        $endTime = Carbon::parse($serviceSchedule->end_time)->setDateFrom($today);
-
-        // Jika sekarang masih dalam jam pelayanan, gunakan waktu sekarang
-        if ($now->gte($startTime) && $now->lte($endTime)) {
-            return $now->format('Y-m-d H:i:s');
+        if ($uniqueQueues->isEmpty()) {
+            $this->info('No unique expired queues to process for this schedule.');
+            return;
         }
 
-        // Jika sekarang sebelum jam mulai pelayanan hari ini, gunakan jam mulai hari ini
-        if ($now->lt($startTime)) {
-            return $startTime->format('Y-m-d H:i:s');
-        }
+        $this->info('Found ' . $uniqueQueues->count() . ' unique expired queues for this schedule.');
 
-        // Jika sekarang setelah jam selesai pelayanan, gunakan jam mulai besok
-        $tomorrow = Carbon::tomorrow();
-        return Carbon::parse($serviceSchedule->start_time)->setDateFrom($tomorrow)->format('Y-m-d H:i:s');
-    }
+        $holidayService = new HolidayService();
+        $processingTime = $serviceSchedule->processing_time;
 
-    /**
-     * Membersihkan antrian duplikat dari database
-     * Hanya menyimpan satu antrian untuk setiap surat yang diisi
-     */
-    private function cleanupDuplicateQueues($serviceScheduleId)
-    {
-        $this->info('Cleaning up duplicate queues for this schedule...');
+        // Find the last scheduled time for this service to determine where to start adding new queues.
+        $lastSchedule = LetterQueue::where('service_schedule_id', $serviceSchedule->id)
+                                ->orderBy('scheduled_date', 'desc')
+                                ->first();
 
-        // Ambil semua antrian dengan status waiting untuk jadwal ini
-        $waitingQueues = LetterQueue::where('status', 'waiting')
-            ->where('service_schedule_id', $serviceScheduleId)
-            ->get();
-
-        // Kelompokkan berdasarkan filled_letter_id
-        $groupedQueues = $waitingQueues->groupBy('filled_letter_id');
-
-        $deletedCount = 0;
-
-        // Untuk setiap kelompok, simpan hanya antrian dengan ID terkecil
-        foreach ($groupedQueues as $filledLetterId => $queues) {
-            if ($queues->count() > 1) {
-                // Urutkan berdasarkan ID
-                $sortedQueues = $queues->sortBy('id');
-
-                // Simpan yang pertama (ID terkecil)
-                $keepQueue = $sortedQueues->first();
-
-                // Hapus sisanya
-                foreach ($sortedQueues as $queue) {
-                    if ($queue->id != $keepQueue->id) {
-                        $queue->delete();
-                        $deletedCount++;
-                    }
-                }
+        // Start scheduling after the last queue, or from now, whichever is later.
+        $nextAvailableTime = Carbon::now();
+        if ($lastSchedule) {
+            $endOfLastQueue = Carbon::parse($lastSchedule->scheduled_date)->addMinutes($processingTime);
+            if ($endOfLastQueue->isAfter($nextAvailableTime)) {
+                $nextAvailableTime = $endOfLastQueue;
             }
         }
 
-        if ($deletedCount > 0) {
-            $this->info("Deleted {$deletedCount} duplicate queues.");
-        } else {
-            $this->info('No duplicate queues found.');
+        foreach ($uniqueQueues as $queue) {
+            // Ensure the $nextAvailableTime is a valid, bookable slot.
+            while (true) {
+                $day = $nextAvailableTime->copy()->startOfDay();
+
+                // 1. Check for holidays
+                if ($holidayService->isHoliday($day)) {
+                    // If it's a holiday, advance to the start of the next day.
+                    $nextAvailableTime = $day->addDay()->setTimeFromTimeString($serviceSchedule->start_time);
+                    continue; // Re-run checks for the new day.
+                }
+
+                $startTime = $day->copy()->setTimeFromTimeString($serviceSchedule->start_time);
+                $endTime = $day->copy()->setTimeFromTimeString($serviceSchedule->end_time);
+
+                // 2. If current time is before service hours, move to start time.
+                if ($nextAvailableTime->isBefore($startTime)) {
+                    $nextAvailableTime = $startTime;
+                }
+
+                // 3. If current time is after service hours, advance to the next day.
+                if ($nextAvailableTime->isAfter($endTime)) {
+                    $nextAvailableTime = $day->addDay()->setTimeFromTimeString($serviceSchedule->start_time);
+                    continue; // Re-run checks for the new day.
+                }
+
+                // If all checks pass, this is a valid slot.
+                break;
+            }
+
+            // Update the queue with the valid time slot.
+            $queue->update(['scheduled_date' => $nextAvailableTime]);
+            $this->info("Updated queue #{$queue->id} to {$nextAvailableTime->toDateTimeString()}");
+
+            // Increment the time for the next queue.
+            $nextAvailableTime->addMinutes($processingTime);
         }
+
+        $this->info('All expired queues for this schedule have been updated successfully.');
     }
 }
