@@ -38,6 +38,11 @@
                                     <a href="{{ route('user.letter-queues.show', $queue->id) }}" class="btn btn-sm btn-info">
                                         <i class="fa fa-eye"></i> Detail
                                     </a>
+                                    @if($queue->file_path && $queue->status == 'completed')
+                                        <a href="{{ route('user.letter-queues.download', $queue->id) }}" class="btn btn-sm btn-success">
+                                            <i class="fa fa-download"></i> Unduh File
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                             @empty

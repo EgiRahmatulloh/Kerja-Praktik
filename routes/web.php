@@ -85,6 +85,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     // Antrian Surat
     Route::resource('letter-queues', LetterQueueController::class)->except(['create', 'store', 'destroy']);
     Route::put('letter-queues/{id}/status', [LetterQueueController::class, 'updateStatus'])->name('letter-queues.update-status');
+    Route::get('letter-queues/{id}/download', [LetterQueueController::class, 'download'])->name('letter-queues.download');
 
     // Jadwal Pelayanan
     Route::resource('service-schedules', ServiceScheduleController::class);
@@ -117,6 +118,7 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'user'])->group(functi
     // Antrian Surat
     Route::get('/letter-queues', [UserLetterQueueController::class, 'index'])->name('letter-queues.index');
     Route::get('/letter-queues/{id}', [UserLetterQueueController::class, 'show'])->name('letter-queues.show');
+    Route::get('/letter-queues/{id}/download', [UserLetterQueueController::class, 'download'])->name('letter-queues.download');
     // Notifikasi
     Route::get('/notifications/check', [NotificationController::class, 'check'])->name('notifications.check');
     Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');

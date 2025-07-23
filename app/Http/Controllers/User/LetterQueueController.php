@@ -44,4 +44,25 @@ class LetterQueueController extends Controller
             
         return view('user.letter-queues.show', compact('queue'));
     }
+    public function download($id)
+    {
+        $queue = LetterQueue::whereHas('filledLetter', function($query) {
+                $query->where('user_id', Auth::id());
+            })
+            ->findOrFail($id);
+
+        if (!$queue->file_path) {
+            return redirect()->back()->with('error', 'File tidak ditemukan.');
+        }
+
+        $filePath = storage_path('app/' . $queue->file_path);
+
+        if (!file_exists($filePath)) {
+            return redirect()->back()->with('error', 'File tidak ditemukan di storage.');
+        }
+
+        $originalFilename = $queue->original_filename ?: basename($filePath);
+
+        return response()->download($filePath, $originalFilename);
+    }
 }

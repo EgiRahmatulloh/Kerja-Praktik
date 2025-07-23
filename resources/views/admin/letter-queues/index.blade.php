@@ -114,7 +114,17 @@
                                                     @if($queue->notes)
                                                     <tr>
                                                         <th>Catatan:</th>
-                                                        <td>{{ $queue->notes }}</td>
+                                                        <td class="notes-display">{{ $queue->notes }}</td>
+                                                    </tr>
+                                                    @endif
+                                                    @if($queue->file_path)
+                                                    <tr>
+                                                        <th>File:</th>
+                                                        <td>
+                                                            <a href="{{ route('admin.letter-queues.download', $queue->id) }}" class="btn btn-sm btn-outline-primary download-link">
+                                                                <i class="bi bi-download"></i> Unduh File
+                                                            </a>
+                                                        </td>
                                                     </tr>
                                                     @endif
                                                 </table>
@@ -160,23 +170,29 @@
     </div>
 </div>
 
-<!-- Modal Catatan Antrian (Opsional) -->
-<div class="modal fade" id="queueNoteModal" tabindex="-1" aria-labelledby="queueNoteModalLabel" aria-hidden="true">
+<!-- Modal Unggah File dan Catatan -->
+<div class="modal fade" id="queueFileUploadModal" tabindex="-1" aria-labelledby="queueFileUploadModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="queueNoteModalLabel">Catatan Antrian</h5>
+                <h5 class="modal-title" id="queueFileUploadModalLabel">Unggah File & Catatan</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="mb-3">
-                    <label for="queueNoteInput" class="form-label">Masukkan catatan (opsional):</label>
-                    <textarea class="form-control" id="queueNoteInput" rows="3"></textarea>
-                </div>
+                <form id="queueFileForm" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="queueFileInput" class="form-label">Unggah File (opsional, maks. 2MB)</label>
+                        <input class="form-control" type="file" id="queueFileInput" name="file">
+                    </div>
+                    <div class="mb-3">
+                        <label for="queueNoteInput" class="form-label">Catatan (opsional)</label>
+                        <textarea class="form-control" id="queueNoteInput" name="notes" rows="3"></textarea>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary" id="submitQueueNoteBtn">Simpan</button>
+                <button type="button" class="btn btn-primary" id="submitQueueFileBtn">Simpan</button>
             </div>
         </div>
     </div>
@@ -279,27 +295,29 @@
 
             // Validasi catatan untuk status completed
             if (newStatus === 'completed') {
-                $('#queueNoteInput').val(''); // Kosongkan input catatan
-                $('#queueNoteModal').modal('show'); // Tampilkan modal catatan
+                $('#queueFileInput').val('');
+                $('#queueNoteInput').val('');
+                $('#queueFileUploadModal').modal('show');
             } else {
                 // Jika bukan completed, langsung kirim AJAX request
-                updateQueueStatus(queueId, newStatus, currentStatus, '');
+                const formData = new FormData();
+                updateQueueStatus(queueId, newStatus, currentStatus, formData);
             }
         });
 
         // Handle klik tombol 'Simpan' di modal catatan antrian
-        $('#submitQueueNoteBtn').click(function() {
-            const notes = $('#queueNoteInput').val();
-            // Catatan opsional, jadi tidak perlu validasi wajib isi
+        $('#submitQueueFileBtn').click(function() {
+            const form = $('#queueFileForm')[0];
+            const formData = new FormData(form);
 
-            queueStatusChangeConfirmed = true; // Set flag bahwa perubahan sudah dikonfirmasi
-            $('#queueNoteModal').modal('hide'); // Sembunyikan modal catatan
+            queueStatusChangeConfirmed = true;
+            $('#queueFileUploadModal').modal('hide');
 
             const queueId = currentQueueStatusSelect.data('queue-id');
             const newStatus = currentQueueStatusSelect.val();
             const currentStatus = currentQueueStatusSelect.data('current-status');
 
-            updateQueueStatus(queueId, newStatus, currentStatus, notes);
+            updateQueueStatus(queueId, newStatus, currentStatus, formData);
         });
 
         // Handle tombol 'Batal' di modal konfirmasi dan catatan antrian
@@ -310,31 +328,30 @@
             }
         });
 
-        $('#queueNoteModal').on('hidden.bs.modal', function () {
+        $('#queueFileUploadModal').on('hidden.bs.modal', function () {
             if (currentQueueStatusSelect && !queueStatusChangeConfirmed) {
                 const currentStatus = currentQueueStatusSelect.data('current-status');
-                currentQueueStatusSelect.val(currentStatus); // Reset ke status sebelumnya jika dibatalkan
+                currentQueueStatusSelect.val(currentStatus);
             }
         });
 
         // Fungsi untuk mengirim AJAX request update status
-        function updateQueueStatus(queueId, newStatus, currentStatus, notes) {
+        function updateQueueStatus(queueId, newStatus, currentStatus, formData) {
             const statusBadge = currentQueueStatusSelect.siblings('.status-badge');
-
-            // Disable dropdown sementara
             currentQueueStatusSelect.prop('disabled', true);
 
-            // Kirim AJAX request
+            formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+            formData.append('status', newStatus);
+            formData.append('_method', 'PUT'); // Fake PUT method
+
             $.ajax({
                 url: '{{ route("admin.letter-queues.update-status", ":id") }}'.replace(':id', queueId),
-                method: 'PUT',
-                data: {
-                    _token: $('meta[name="csrf-token"]').attr('content'),
-                    status: newStatus,
-                    notes: notes
-                },
+                method: 'POST', // Use POST for multipart form data
+                data: formData,
+                processData: false,
+                contentType: false,
                 success: function(response) {
-                    console.log('Status updated successfully');
+                    console.log('Status updated successfully', response);
 
                     // Update badge status
                     let badgeClass = '';
@@ -362,6 +379,32 @@
 
                     // Update data-current-status
                     $('.status-select[data-queue-id="' + queueId + '"]').data('current-status', newStatus);
+
+                    // perbarui catatan
+                     if (response.notes !== null && response.notes !== undefined) {
+                        const notesRow = statusBadge.closest('.queue-details').find('.notes-display').closest('tr');
+                        if (notesRow.length) {
+                             notesRow.find('.notes-display').text(response.notes);
+                             if(response.notes) notesRow.show(); else notesRow.hide();
+                        } else if (response.notes) {
+                            const table = statusBadge.closest('table');
+                            table.append(`<tr><th>Catatan:</th><td class="notes-display">${response.notes}</td></tr>`);
+                        }
+                    }
+
+                    // perbarui link download
+                    if (response.file_path) {
+                        const downloadRow = statusBadge.closest('.queue-details').find('.download-link').closest('tr');
+                        const downloadUrl = '{{ url("admin/letter-queues") }}/' + queueId + '/download';
+                       if (downloadRow.length) {
+                            downloadRow.find('.download-link').attr('href', downloadUrl);
+                            downloadRow.show();
+                       } else {
+                            const table = statusBadge.closest('table');
+                            table.append(`<tr><th>File:</th><td><a href="${downloadUrl}" class="btn btn-sm btn-outline-primary download-link"><i class="bi bi-download"></i> Unduh File</a></td></tr>`);
+
+                       }
+                    }
 
                     // Reset flag konfirmasi setelah berhasil update
                     queueStatusChangeConfirmed = false;

@@ -14,7 +14,9 @@ class LetterQueue extends Model
         'service_schedule_id',
         'scheduled_date',
         'status',
-        'notes'
+        'notes',
+        'file_path',
+        'original_filename'
     ];
 
     protected $casts = [

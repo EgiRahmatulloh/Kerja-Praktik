@@ -126,6 +126,7 @@ class LetterQueueController extends Controller
             $request->validate([
                 'status' => 'required|in:waiting,processing,completed',
                 'notes' => 'nullable|string',
+                'file' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:2048',
             ]);
 
             $queue = LetterQueue::findOrFail($id);
@@ -133,10 +134,21 @@ class LetterQueueController extends Controller
             $newStatus = $request->status;
 
             // Update status antrian saat ini
-            $queue->update([
+            $updateData = [
                 'status' => $newStatus,
                 'notes' => $request->notes,
-            ]);
+            ];
+
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $originalFilename = $file->getClientOriginalName();
+                $filePath = $file->store('public/letter_files');
+                
+                $updateData['file_path'] = $filePath;
+                $updateData['original_filename'] = $originalFilename;
+            }
+
+            $queue->update($updateData);
 
             // Jika status diubah menjadi completed, atur antrian berikutnya
             if ($oldStatus != 'completed' && $newStatus == 'completed') {
@@ -149,7 +161,8 @@ class LetterQueueController extends Controller
                     'success' => true,
                     'message' => 'Status antrian surat berhasil diperbarui.',
                     'new_status' => $queue->status,
-                    'notes' => $queue->notes
+                    'notes' => $queue->notes,
+                    'file_path' => $queue->file_path
                 ]);
             }
 
@@ -378,5 +391,23 @@ class LetterQueueController extends Controller
         }
 
         return $deletedCount;
+    }
+    public function download($id)
+    {
+        $queue = LetterQueue::findOrFail($id);
+
+        if (!$queue->file_path) {
+            return redirect()->back()->with('error', 'File tidak ditemukan.');
+        }
+
+        $filePath = storage_path('app/' . $queue->file_path);
+
+        if (!file_exists($filePath)) {
+            return redirect()->back()->with('error', 'File tidak ditemukan di storage.');
+        }
+
+        $originalFilename = $queue->original_filename ?: basename($filePath);
+
+        return response()->download($filePath, $originalFilename);
     }
 }

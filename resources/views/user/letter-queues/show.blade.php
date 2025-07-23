@@ -84,13 +84,23 @@
                                         <td>{{ $queue->notes }}</td>
                                     </tr>
                                     @endif
+                                    @if($queue->file_path && $queue->status == 'completed')
+                                    <tr>
+                                        <th>File Selesai</th>
+                                        <td>
+                                            <a href="{{ route('user.letter-queues.download', $queue->id) }}" class="btn btn-sm btn-success">
+                                                <i class="fa fa-download"></i> Unduh File
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    @endif
                                 </table>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="mt-3">
+                <div class="mt-3 d-flex justify-content-start gap-2">
                     <a href="{{ route('user.letters.show', $queue->filledLetter->id) }}" class="btn btn-primary">
                         <i class="fa fa-file-alt"></i> Lihat Detail Surat
                     </a>
