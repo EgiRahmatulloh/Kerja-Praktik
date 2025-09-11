@@ -1,4 +1,4 @@
-@extends('layouts.main')
+@extends('layouts.login')
 
 @section('container')
 <div class="container py-5 h-100">
@@ -9,7 +9,7 @@
                     <div class="mb-md-4 mt-md-4">
                         <div class="text-center mb-4">
                             <img src="{{ asset('img/iconWeb.png') }}" alt="Logo" width="80">
-                            <h2 class="fw-bold mb-0 text-primary">Arsip Surat</h2>
+                            <h2 class="fw-bold mb-0 text-primary">Pengajuan Surat</h2>
                             <p class="text-muted mb-4">Silahkan login untuk melanjutkan</p>
                         </div>
 

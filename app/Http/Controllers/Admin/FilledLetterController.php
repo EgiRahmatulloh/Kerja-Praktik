@@ -132,6 +132,15 @@ class FilledLetterController extends Controller
 
         // Gunakan ini untuk logging yang aman
         Log::info('Admin Filled Data:', is_array($letter->filled_data) ? $letter->filled_data : ['data' => $letter->filled_data]);
+        
+        // Tambahkan nama pemohon ke template
+        $namaPemohon = $letter->user->name;
+        $content = str_replace('{{ $namaPemohon }}', $namaPemohon, $content);
+        $content = str_replace("{{ \$data->namaPemohon }}", $namaPemohon, $content);
+        $content = str_replace("{{\$data->namaPemohon}}", $namaPemohon, $content);
+        $content = str_replace('{{ $nama }}', $namaPemohon, $content);
+        $content = str_replace("{{ \$data->nama }}", $namaPemohon, $content);
+        $content = str_replace("{{\$data->nama}}", $namaPemohon, $content);
 
         // Pastikan filled_data adalah array sebelum melakukan foreach
         if (is_array($letter->filled_data)) {
@@ -488,6 +497,13 @@ class FilledLetterController extends Controller
 
         // Baca template DOCX yang sudah ada
         $templateProcessor = new TemplateProcessor($templatePath);
+        
+        // Tambahkan nama pemohon ke template
+        $namaPemohon = $letter->user->name;
+        $templateProcessor->setValue('namaPemohon', $namaPemohon);
+        $templateProcessor->setValue('data.namaPemohon', $namaPemohon);
+        $templateProcessor->setValue('nama', $namaPemohon);
+        $templateProcessor->setValue('data.nama', $namaPemohon);
 
         // Ganti semua variabel dengan nilai sebenarnya menggunakan TemplateProcessor
         foreach ($letter->filled_data as $key => $value) {
